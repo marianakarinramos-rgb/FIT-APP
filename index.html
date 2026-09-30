@@ -68,6 +68,7 @@
         body { 
             background-color: var(--bg-light); color: var(--text-main); line-height: 1.4; padding-bottom: 90px;
             max-width: 500px; margin: 0 auto; min-height: 100vh; position: relative; box-shadow: 0 0 30px rgba(0,0,0,0.05);
+            overflow-x: hidden;
         }
 
         /* Login */
@@ -245,15 +246,17 @@
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--text-muted); font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.3s;}
         .nav-item.active { color: var(--primary); transform: translateY(-4px);}
 
-        /* Timer Reubicado para que no tape la barra */
+        /* Timer Movible (Draggable) con cursor de agarre */
         .rest-timer {
-            position: fixed; bottom: 115px; left: 50%; transform: translateX(-50%) translateY(180%);
-            background: var(--primary-gradient); color: #FFF; padding: 14px 30px; border-radius: 99px;
-            font-size: 20px; font-weight: 900; display: flex; align-items: center; gap: 16px;
-            box-shadow: 0 15px 30px rgba(255,126,126,0.4); transition: 0.4s cubic-bezier(0.16, 1, 0.32, 1); z-index: 1000;
+            position: fixed; bottom: 115px; left: 50%; transform: translateX(-50%);
+            background: var(--primary-gradient); color: #FFF; padding: 14px 28px; border-radius: 99px;
+            font-size: 20px; font-weight: 900; display: flex; align-items: center; gap: 14px;
+            box-shadow: 0 15px 30px rgba(255,126,126,0.4); z-index: 1000; cursor: grab; user-select: none;
+            touch-action: none; display: none; /* Se activa con clase */
         }
-        .rest-timer.active { transform: translateX(-50%) translateY(0); }
-        .timer-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer;}
+        .rest-timer:active { cursor: grabbing; }
+        .rest-timer.active { display: flex; }
+        .timer-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer;}
 
         .toast { 
             position: fixed; bottom: 115px; left: 50%; transform: translateX(-50%) translateY(100px); 
@@ -413,8 +416,9 @@
         </div>
     </div>
 
+    <!-- Timer Movible (Draggable) -->
     <div class="rest-timer" id="restTimer">
-        ⏳ <span id="timerText">01:00</span>
+        <span>⏳ <span id="timerText">01:00</span></span>
         <button class="timer-close" onclick="closeTimer()">✕</button>
     </div>
 
@@ -513,7 +517,7 @@
                 }
             } catch (e) {
                 console.error("Error conectando a Firebase:", e);
-                showToast("Error de conexión a la nube ☁️️");
+                showToast("Error de conexión a la nube ☁");
             }
         };
 
@@ -974,7 +978,7 @@
             updateHistoryView();
             updateNextDayHighlight();
 
-            alert(`¡Entrenamiento completado ${currentUserName}! ✨🎀`);
+            alert(`¡Entrenamiento completado ${currentUserName}! ✨💪`);
             
             goHome();
             switchMainTab('Evolucion');
@@ -1031,6 +1035,57 @@
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
         }
         
+        // --- MOTOR DE ARRASTRE TÁCTIL (DRAG & DROP DEL TIMER) ---
+        const timerEl = document.getElementById('restTimer');
+        let isDragging = false;
+        let startX, startY, initialX, initialY;
+
+        timerEl.addEventListener('touchstart', dragStart, {passive: true});
+        timerEl.addEventListener('touchmove', drag, {passive: false});
+        timerEl.addEventListener('touchend', dragEnd, {passive: true});
+
+        timerEl.addEventListener('mousedown', dragStart);
+        window.addEventListener('mousemove', drag);
+        window.addEventListener('mouseup', dragEnd);
+
+        function dragStart(e) {
+            // Si toca el botón de cerrar, no arrastrar
+            if(e.target.classList.contains('timer-close')) return;
+            
+            isDragging = true;
+            const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            
+            startX = clientX;
+            startY = clientY;
+            
+            const rect = timerEl.getBoundingClientRect();
+            initialX = rect.left;
+            initialY = rect.top;
+            
+            timerEl.style.transform = 'none';
+            timerEl.style.left = initialX + 'px';
+            timerEl.style.top = initialY + 'px';
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            if(e.type === 'touchmove') e.preventDefault(); // Evitar scroll de pantalla al mover
+
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+            const dx = clientX - startX;
+            const dy = clientY - startY;
+
+            timerEl.style.left = (initialX + dx) + 'px';
+            timerEl.style.top = (initialY + dy) + 'px';
+        }
+
+        function dragEnd() {
+            isDragging = false;
+        }
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').catch(() => {});
