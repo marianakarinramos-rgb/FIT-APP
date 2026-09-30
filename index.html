@@ -196,21 +196,28 @@
         .streak-text { font-size: 14px; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px;}
 
         .history-list { list-style: none; }
-        .history-item { padding: 12px 0; font-size: 15px; font-weight: 700; color: var(--text-main); border-bottom: 1px solid #F0F0F0; display: flex; justify-content: space-between;}
-        .history-item span { color: var(--text-muted); font-size: 13px;}
+        .history-item { padding: 12px 0; border-bottom: 1px solid #F0F0F0; display: flex; justify-content: space-between; align-items: center;}
+        .history-item-date { font-size: 15px; font-weight: 800; color: var(--text-main); }
+        .history-item-desc { color: var(--text-muted); font-size: 13px; font-weight: 600;}
+        .btn-delete-history { background: transparent; border: none; color: #D32F2F; font-size: 20px; cursor: pointer; padding: 4px; }
 
         .btn-logout { width: 100%; padding: 14px; background: #FFEBEE; color: #D32F2F; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 24px; }
 
+        /* Controles Historial Manual */
+        .manual-history-box { background: #F9F9F9; padding: 16px; border-radius: 12px; margin-top: 20px; border: 1px solid #EEE;}
+        .manual-history-box h4 { font-size: 14px; font-weight: 800; margin-bottom: 12px; color: var(--text-muted); }
+        .manual-history-flex { display: flex; gap: 8px; }
+
         /* Navegación Inferior */
         .bottom-nav {
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: var(--surface);
+            position: absolute; bottom: 0; left: 0; width: 100%; background: var(--surface);
             border-top: 1px solid var(--border); display: flex; justify-content: space-around;
-            padding: 12px 0; z-index: 900;
+            padding: 12px 0; z-index: 900; border-radius: 0 0 12px 12px;
         }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer; }
         .nav-item.active { color: var(--text-main); }
 
-        /* Timer y Toast */
+        /* Timer y Toast Ajustados */
         .rest-timer {
             position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(150%);
             background: #000; color: #FFF; padding: 12px 24px; border-radius: 99px;
@@ -335,7 +342,12 @@
                     <div class="streak-text">Entrenamientos Totales</div>
                 </div>
 
-                <h3>Mis Medidas</h3>
+                <h3>Mis Datos</h3>
+                <!-- NUEVO: Campo de Descanso configurable -->
+                <div class="metric-row">
+                    <div class="metric-label">Descanso (segs)</div>
+                    <div><input type="number" class="metric-input" id="metDescanso" placeholder="60" onblur="saveMetrics()"> s</div>
+                </div>
                 <div class="metric-row"><div class="metric-label">Peso Corporal</div><div><input type="number" class="metric-input" id="metPeso" placeholder="00.0" onblur="saveMetrics()"> kg</div></div>
                 <div class="metric-row"><div class="metric-label">Cintura</div><div><input type="number" class="metric-input" id="metCintura" placeholder="00" onblur="saveMetrics()"> cm</div></div>
                 <div class="metric-row"><div class="metric-label">Cadera</div><div><input type="number" class="metric-input" id="metCadera" placeholder="00" onblur="saveMetrics()"> cm</div></div>
@@ -344,6 +356,22 @@
             <div class="profile-section">
                 <h3>Últimos Entrenamientos</h3>
                 <ul class="history-list" id="historyList"></ul>
+                
+                <!-- NUEVO: Formulario para inyectar historial viejo -->
+                <div class="manual-history-box">
+                    <h4>➕ Registrar día anterior:</h4>
+                    <div class="manual-history-flex">
+                        <input type="date" id="manualDate" class="form-control" style="padding: 8px;">
+                        <select id="manualDay" class="form-control" style="padding: 8px;">
+                            <option value="Día 1">Día 1</option>
+                            <option value="Día 2">Día 2</option>
+                            <option value="Día 3">Día 3</option>
+                            <option value="Día 4">Día 4</option>
+                        </select>
+                        <button class="btn-modal-save" style="margin-top:0; padding: 8px 16px;" onclick="addManualHistory()">Agregar</button>
+                    </div>
+                </div>
+
                 <button class="btn-logout" onclick="logout()">Cerrar Sesión / Cambiar Usuario</button>
             </div>
         </div>
@@ -368,6 +396,34 @@
     <div class="toast" id="toast">Mensaje</div>
 
     <script>
+        const localImagesMap = {
+            "Prensa": "prensa.png",
+            "Extensiones en maquina": "extenciones maquina.png",
+            "Extensiones máquina": "extenciones maquina.png",
+            "Extensiones": "extenciones maquina.png",
+            "Gemelos sentado": "gemelos sentado.png",
+            "Gemelos": "gemelos sentado.png",
+            "Tirones en polea con barra": "tirones polea.png",
+            "Tirones polea (Barra)": "tirones polea.png",
+            "Tirones polea": "tirones polea.png",
+            "Tirones tras nuca": "tirones nuca.png",
+            "Tirones nuca": "tirones nuca.png",
+            "Elev. lateral": "elevacion lateral en maquina.png",
+            "Elevación lateral (Máq.)": "elevacion lateral en maquina.png",
+            "Vuelos": "posterior en polea.png",
+            "Press mancu.": "press mancuerna.png",
+            "Press sentado": "press mancuerna.png",
+            "Hip Thrust": "hip thrust.png",
+            "Patada Glúteo": "patada de gluteo en polea.png",
+            "Jalón pecho": "jalon al pecho.png",
+            "Pull-over": "pull over.png",
+            "Pull over": "pull over.png",
+            "Remo disco": "remo bajo polea.png",
+            "Sent. Sumo": "sentadilla sumo.png",
+            "Abducción": "abduccion.png",
+            "Femorales": "femorales.png"
+        };
+
         const muscleImages = {
             "Piernas": "https://images.unsplash.com/photo-1434682881908-b43d0467b798?w=200&q=80",
             "Tríceps": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200&q=80",
@@ -470,12 +526,17 @@
                 document.getElementById('metPeso').value = metrics.peso || '';
                 document.getElementById('metCintura').value = metrics.cintura || '';
                 document.getElementById('metCadera').value = metrics.cadera || '';
+                document.getElementById('metDescanso').value = metrics.descanso || '60';
             } else {
                 progressData = {}; weightData = {}; historyData = [];
                 document.getElementById('metPeso').value = '';
                 document.getElementById('metCintura').value = '';
                 document.getElementById('metCadera').value = '';
+                document.getElementById('metDescanso').value = '60';
             }
+
+            // Ordenar historial por fecha real (timestamp) para que no se mezcle
+            historyData.sort((a, b) => b.ts - a.ts);
 
             updateHistoryView();
             goHome(); 
@@ -490,7 +551,8 @@
                 metrics: {
                     peso: document.getElementById('metPeso').value,
                     cintura: document.getElementById('metCintura').value,
-                    cadera: document.getElementById('metCadera').value
+                    cadera: document.getElementById('metCadera').value,
+                    descanso: document.getElementById('metDescanso').value
                 }
             }, { merge: true });
         }
@@ -574,7 +636,6 @@
         }
 
         function openEditModal(index) {
-            // Como ordenamos el array, buscamos el ejercicio usando el originalIndex
             const ex = masterRutinas[currentDay].ejercicios[index];
             document.getElementById('modalTitle').textContent = "Editar Ejercicio";
             document.getElementById('editExIndex').value = index;
@@ -722,28 +783,29 @@
             const list = document.getElementById('exerciseList');
             const checks = progressData[`day_${currentDay}`];
 
-            // 1. Mapeamos agregando el índice original para no perder la referencia real
             let exercisesWithState = data.ejercicios.map((ex, index) => {
                 return { ...ex, originalIndex: index, isDone: checks[index] };
             });
 
-            // 2. ORDENAMIENTO ZERO-SCROLL (Solo si no estamos en Modo Edición)
             if(!isEditMode) {
                 exercisesWithState.sort((a, b) => {
-                    if (a.isDone === b.isDone) return a.originalIndex - b.originalIndex; // Respetar orden original entre los pendientes
-                    return a.isDone ? 1 : -1; // Mandar los "Terminados" (true) al fondo (1)
+                    if (a.isDone === b.isDone) return a.originalIndex - b.originalIndex; 
+                    return a.isDone ? 1 : -1; 
                 });
             }
 
-            // 3. Renderizamos usando el array ordenado
             list.innerHTML = exercisesWithState.map((ex) => {
-                const index = ex.originalIndex; // Clave para que los botones sepan a quién modificar
+                const index = ex.originalIndex; 
                 const isDone = ex.isDone;
                 const savedKg = weightData[ex.name] || '';
                 
                 const cloudPhoto = masterImages[ex.name];
+                
+                let nombreLimpio = ex.name.trim();
+                const localPhoto = localImagesMap[nombreLimpio] ? `./${localImagesMap[nombreLimpio]}` : null;
                 const fallback = muscleImages[ex.muscle] || muscleImages["Piernas"];
-                const imgUrl = cloudPhoto ? cloudPhoto : fallback;
+                
+                const imgUrl = cloudPhoto ? cloudPhoto : (localPhoto ? localPhoto : fallback);
                 
                 const checkIcon = isDone ? `<svg width="28" height="28" fill="none" stroke="#000" viewBox="0 0 24 24" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>` : '';
                 
@@ -801,7 +863,7 @@
 
         async function saveMetrics() {
             await saveUserCloudData();
-            showToast('Medidas guardadas en la nube');
+            showToast('Guardado en la nube');
         }
 
         async function toggleExercise(index) {
@@ -809,7 +871,6 @@
             const isNowDone = !progressData[`day_${currentDay}`][index];
             progressData[`day_${currentDay}`][index] = isNowDone;
             
-            // Re-renderiza para aplicar el Zero-Scroll inmediatamente
             renderExercises();
             updateProgress();
             await saveUserCloudData();
@@ -819,11 +880,16 @@
 
         function startRestTimer() {
             clearInterval(timerInterval);
-            let timeLeft = 60;
+            let userRestTime = parseInt(document.getElementById('metDescanso').value) || 60;
+            let timeLeft = userRestTime;
+            
             const timerEl = document.getElementById('restTimer');
             const textEl = document.getElementById('timerText');
             timerEl.classList.add('active');
-            textEl.textContent = `01:00`;
+            
+            const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const s = (timeLeft % 60).toString().padStart(2, '0');
+            textEl.textContent = `${m}:${s}`;
 
             timerInterval = setInterval(() => {
                 timeLeft--;
@@ -831,8 +897,9 @@
                     closeTimer();
                     if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
                 } else {
-                    const secs = timeLeft.toString().padStart(2, '0');
-                    textEl.textContent = `00:${secs}`;
+                    const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+                    const secs = (timeLeft % 60).toString().padStart(2, '0');
+                    textEl.textContent = `${mins}:${secs}`;
                 }
             }, 1000);
         }
@@ -854,7 +921,7 @@
 
         async function finishWorkout() {
             const todayStr = new Date().toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
-            historyData.unshift({ date: todayStr, dayTitle: masterRutinas[currentDay].title });
+            historyData.unshift({ date: todayStr, dayTitle: masterRutinas[currentDay].title, ts: Date.now() });
             
             progressData[`day_${currentDay}`] = Array(masterRutinas[currentDay].ejercicios.length).fill(false);
             
@@ -867,6 +934,32 @@
             switchMainTab('Evolucion');
         }
 
+        async function addManualHistory() {
+            const dateVal = document.getElementById('manualDate').value;
+            const dayVal = document.getElementById('manualDay').value;
+            if(!dateVal) return alert("Por favor elegí una fecha.");
+            
+            // Forzar zona horaria local para que no cambie el día
+            const dateObj = new Date(dateVal + 'T12:00:00'); 
+            const dateStr = dateObj.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+            
+            historyData.unshift({ date: dateStr, dayTitle: dayVal, ts: dateObj.getTime() });
+            historyData.sort((a, b) => b.ts - a.ts); // Ordenar siempre por fecha
+            
+            await saveUserCloudData();
+            updateHistoryView();
+            showToast("Registro pasado guardado 🚀");
+        }
+
+        async function deleteHistory(index) {
+            if(confirm("¿Estás segura que querés borrar este registro del historial?")) {
+                historyData.splice(index, 1);
+                await saveUserCloudData();
+                updateHistoryView();
+                showToast("Registro borrado");
+            }
+        }
+
         function updateHistoryView() {
             document.getElementById('streakCount').textContent = historyData.length;
             const list = document.getElementById('historyList');
@@ -876,8 +969,14 @@
                 return;
             }
 
-            list.innerHTML = historyData.slice(0, 10).map(item => `
-                <li class="history-item">${item.date} <span>Completó ${item.dayTitle}</span></li>
+            list.innerHTML = historyData.slice(0, 10).map((item, index) => `
+                <li class="history-item">
+                    <div>
+                        <div class="history-item-date">${item.date}</div>
+                        <div class="history-item-desc">Completó ${item.dayTitle}</div>
+                    </div>
+                    <button class="btn-delete-history" onclick="deleteHistory(${index})">🗑️</button>
+                </li>
             `).join('');
         }
 
