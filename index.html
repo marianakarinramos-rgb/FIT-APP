@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#FDFDFF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>FitApp | Ital Fitnes</title>
+    
+    <style>
+        :root {
+            --bg-light: #FDFDFF;
+            --surface: #FFFFFF;
+            --text-main: #000000;
+            --text-muted: #555555;
+            --border: #EEEEEE;
+            
+            --day1: #A5D6A7; 
+            --day2: #FFCC80; 
+            --day3: #F48FB1; 
+            --day4: #90CAF9; 
+            
+            --radius-lg: 24px;
+            --radius-sm: 12px;
+            --shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { background-color: var(--bg-light); color: var(--text-main); line-height: 1.4; padding-bottom: 80px; }
+
+        /* Login */
+        #userSelector {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: var(--bg-light); z-index: 1000; display: flex; 
+            flex-direction: column; align-items: center; justify-content: center; padding: 40px;
+        }
+        #userSelector h2 { font-size: 32px; font-weight: 800; margin-bottom: 40px; text-align: center; }
+        .user-btn {
+            width: 100%; max-width: 300px; padding: 20px; background: var(--surface); 
+            border: 2px solid var(--border); border-radius: var(--radius-sm); 
+            margin-bottom: 16px; font-size: 20px; font-weight: 800; cursor: pointer; 
+            box-shadow: var(--shadow); transition: 0.2s; text-align: center;
+        }
+
+        /* App Core */
+        .app-view { display: none; animation: fadeIn 0.3s ease; }
+        .app-view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .header { 
+            padding: 24px 20px; background: var(--surface); border-bottom: 1px solid var(--border); 
+            position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between;
+        }
+        .header-info { display: flex; align-items: center; gap: 16px; }
+        .header img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid #ddd; }
+        .header h1 { font-size: 24px; font-weight: 800; }
+        .header p { color: var(--text-muted); font-size: 14px; font-weight: 600; margin-top: 2px;}
+        
+        .date-badge { text-align: right; }
+        .date-badge .day { font-size: 20px; font-weight: 800; color: var(--text-main); }
+        .date-badge .month { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+
+        /* Grilla Días */
+        .days-grid { display: grid; grid-template-columns: 1fr; gap: 16px; padding: 20px; }
+        .day-card { 
+            background: var(--surface); border-radius: var(--radius-lg); padding: 24px; 
+            border: 1px solid var(--border); cursor: pointer; box-shadow: var(--shadow); 
+            position: relative; overflow: hidden; min-height: 120px; display: flex; flex-direction: column; justify-content: center;
+        }
+        .day-card::after { content: ''; position: absolute; left: 0; top: 0; width: 10px; height: 100%; }
+        .day-num { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+        .day-desc { font-size: 16px; font-weight: 700; color: var(--text-muted); }
+        .day-card.d1::after { background-color: var(--day1); } 
+        .day-card.d2::after { background-color: var(--day2); } 
+        .day-card.d3::after { background-color: var(--day3); } 
+        .day-card.d4::after { background-color: var(--day4); } 
+
+        /* Ejercicios */
+        .routine-container { display: none; padding: 0 16px; }
+        .routine-container.active { display: block; }
+        .back-btn { background: #EEE; border: none; font-size: 16px; font-weight: 700; margin: 16px 0; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 99px; }
+        .day-title { font-size: 32px; font-weight: 900; }
+        .progress-bar-bg { width: 100%; height: 14px; background: #EEE; border-radius: 7px; overflow: hidden; margin-top: 12px; margin-bottom: 24px;}
+        .progress-bar-fill { height: 100%; width: 0%; transition: 0.3s; }
+
+        .exercise-item { 
+            background: var(--surface); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 16px; 
+            display: flex; align-items: center; border: 1px solid var(--border); box-shadow: var(--shadow); position: relative;
+        }
+        .exercise-item.done { opacity: 0.5; background: #FDFDFF; border-color: transparent; box-shadow: none;}
+        
+        .img-container { position: relative; width: 80px; height: 80px; margin-right: 16px; flex-shrink: 0; cursor: pointer; }
+        .ex-img { width: 100%; height: 100%; border-radius: 12px; object-fit: cover; border: 1px solid #ddd; }
+        .cam-badge { position: absolute; bottom: -5px; right: -5px; background: #000; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 2px solid white; }
+        
+        .ex-info { flex: 1; min-width: 0; }
+        .ex-muscle { font-size: 12px; text-transform: uppercase; font-weight: 800; color: var(--text-muted); margin-bottom: 2px; }
+        .ex-name { font-size: 18px; font-weight: 800; margin-bottom: 8px; line-height: 1.1; }
+        
+        .ex-metrics { display: flex; align-items: center; gap: 12px; }
+        .ex-reps { font-size: 15px; font-weight: 800; color: #FFF; background: #333; padding: 6px 12px; border-radius: 8px; }
+        
+        /* Input Cargas */
+        .kg-input-wrapper { display: flex; align-items: center; background: #F5F5F5; border-radius: 8px; padding: 4px 8px; border: 1px solid #E0E0E0;}
+        .kg-input { border: none; background: transparent; width: 40px; font-size: 16px; font-weight: 800; text-align: right; outline: none; color: var(--text-main);}
+        .kg-label { font-size: 14px; font-weight: 700; color: var(--text-muted); margin-left: 4px;}
+
+        .checkbox { width: 44px; height: 44px; border-radius: 12px; border: 3px solid #CCC; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; margin-left: 12px; background: white; }
+        .exercise-item.done .checkbox { border-color: transparent; }
+
+        .btn-finish { width: 100%; padding: 20px; border-radius: var(--radius-sm); font-size: 20px; font-weight: 800; color: #FFF; border: none; margin-top: 24px; display: none; box-shadow: var(--shadow); }
+
+        /* Timer Flotante */
+        .rest-timer {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(150%);
+            background: #000; color: #FFF; padding: 12px 24px; border-radius: 99px;
+            font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000;
+        }
+        .rest-timer.active { transform: translateX(-50%) translateY(0); }
+        .timer-close { background: #333; border: none; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer;}
+
+        /* Tab Evolución */
+        .profile-section { background: var(--surface); border-radius: var(--radius-lg); padding: 24px; margin: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+        .profile-section h3 { font-size: 20px; font-weight: 800; margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 10px;}
+        
+        .metric-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #F0F0F0; }
+        .metric-label { font-size: 16px; font-weight: 700; color: var(--text-muted); }
+        .metric-input { text-align: right; font-size: 18px; font-weight: 800; border: none; background: #F9F9F9; padding: 8px 12px; border-radius: 8px; width: 90px; outline: none;}
+        
+        .streak-box { background: linear-gradient(135deg, #A5D6A7, #81C784); padding: 20px; border-radius: 16px; color: #000; text-align: center; margin-bottom: 20px; }
+        .streak-num { font-size: 36px; font-weight: 900; line-height: 1; }
+        .streak-text { font-size: 14px; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px;}
+
+        .history-list { list-style: none; }
+        .history-item { padding: 12px 0; font-size: 15px; font-weight: 700; color: var(--text-main); border-bottom: 1px solid #F0F0F0; display: flex; justify-content: space-between;}
+        .history-item span { color: var(--text-muted); font-size: 13px;}
+
+        /* Navegación Inferior */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: var(--surface);
+            border-top: 1px solid var(--border); display: flex; justify-content: space-around;
+            padding: 12px 0; z-index: 900;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer; }
+        .nav-item.active { color: var(--text-main); }
+    </style>
+</head>
+<body>
+
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleImageCapture(event)">
+
+    <!-- PANTALLA DE BIENVENIDA -->
+    <div id="userSelector">
+        <h2>¿Quién entrena hoy? 💪</h2>
+        <div class="user-btn" onclick="selectUser('Mariana')">Mariana</div>
+        <div class="user-btn" onclick="selectUser('Silvana')">Silvana</div>
+        <div class="user-btn" onclick="selectUser('Mariela')">Mariela</div>
+    </div>
+
+    <div id="mainApp" style="display: none;">
+        
+        <!-- HEADER COMPARTIDO -->
+        <div class="header">
+            <div class="header-info">
+                <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=100&auto=format&fit=crop" alt="Gym">
+                <div>
+                    <h1 id="userNameHeader">Chicata</h1>
+                    <p>Ital Fitnes</p>
+                </div>
+            </div>
+            <div class="date-badge">
+                <div class="day" id="dateDay">00</div>
+                <div class="month" id="dateMonth">MES</div>
+            </div>
+        </div>
+
+        <!-- TAB 1: RUTINA -->
+        <div id="tabRutina" class="app-view active">
+            <div id="homeView">
+                <div class="days-grid">
+                    <div class="day-card d1" onclick="openDay(1)"><div class="day-num">DÍA 1</div><div class="day-desc">Piernas / Tríceps</div></div>
+                    <div class="day-card d2" onclick="openDay(2)"><div class="day-num">DÍA 2</div><div class="day-desc">Hombros / Glúteos</div></div>
+                    <div class="day-card d3" onclick="openDay(3)"><div class="day-num">DÍA 3</div><div class="day-desc">Dorsales / Piernas</div></div>
+                    <div class="day-card d4" onclick="openDay(4)"><div class="day-num">DÍA 4</div><div class="day-desc">Pectorales / Bíceps</div></div>
+                </div>
+            </div>
+
+            <div id="workoutView" class="routine-container">
+                <button class="back-btn" onclick="goHome()">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+                    Días
+                </button>
+                <div class="day-header">
+                    <h2 class="day-title" id="currentDayTitle">Día X</h2>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+                </div>
+                <div id="exerciseList"></div>
+                <button class="btn-finish" id="finishBtn" onclick="finishWorkout()">Finalizar Entrenamiento 🏆</button>
+            </div>
+        </div>
+
+        <!-- TAB 2: PERFIL / EVOLUCIÓN -->
+        <div id="tabEvolucion" class="app-view">
+            <div class="profile-section">
+                <div class="streak-box">
+                    <div class="streak-num" id="streakCount">0</div>
+                    <div class="streak-text">Entrenamientos Totales</div>
+                </div>
+
+                <h3>Mis Medidas</h3>
+                <div class="metric-row">
+                    <div class="metric-label">Peso Corporal</div>
+                    <div><input type="number" class="metric-input" id="metPeso" placeholder="00.0" onblur="saveMetrics()"> kg</div>
+                </div>
+                <div class="metric-row">
+                    <div class="metric-label">Cintura</div>
+                    <div><input type="number" class="metric-input" id="metCintura" placeholder="00" onblur="saveMetrics()"> cm</div>
+                </div>
+                <div class="metric-row">
+                    <div class="metric-label">Cadera</div>
+                    <div><input type="number" class="metric-input" id="metCadera" placeholder="00" onblur="saveMetrics()"> cm</div>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h3>Últimos Entrenamientos</h3>
+                <ul class="history-list" id="historyList">
+                    <!-- Se llena con JS -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- NAVEGACIÓN INFERIOR -->
+        <div class="bottom-nav">
+            <div class="nav-item active" id="navRutina" onclick="switchMainTab('Rutina')">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                Mi Rutina
+            </div>
+            <div class="nav-item" id="navEvolucion" onclick="switchMainTab('Evolucion')">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                Evolución
+            </div>
+        </div>
+
+        <!-- TIMER FLOTANTE -->
+        <div class="rest-timer" id="restTimer">
+            ⏳ <span id="timerText">01:00</span>
+            <button class="timer-close" onclick="closeTimer()">✕</button>
+        </div>
+
+    </div>
+
+    <script>
+        const muscleImages = {
+            "Piernas": "https://images.unsplash.com/photo-1434682881908-b43d0467b798?w=200&q=80",
+            "Tríceps": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200&q=80",
+            "Hombros": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200&q=80",
+            "Glúteos": "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=200&q=80",
+            "Dorsales": "https://images.unsplash.com/photo-1603287681836-b174ce5074c2?w=200&q=80",
+            "Pectorales": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=200&q=80",
+            "Bíceps": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200&q=80"
+        };
+
+        const rutinas = {
+            1: { color: 'var(--day1)', title: 'Día 1', ejercicios: [
+                { muscle: "Piernas", name: "Prensa", reps: "4x10" },
+                { muscle: "Piernas", name: "Extensiones", reps: "4x10" },
+                { muscle: "Piernas", name: "Gemelos", reps: "4x10" },
+                { muscle: "Tríceps", name: "Tirones polea", reps: "4x10" },
+                { muscle: "Tríceps", name: "Tirones nuca", reps: "4x12" }
+            ]},
+            2: { color: 'var(--day2)', title: 'Día 2', ejercicios: [
+                { muscle: "Hombros", name: "Elev. lateral", reps: "4x10" },
+                { muscle: "Hombros", name: "Vuelos", reps: "4x10" },
+                { muscle: "Hombros", name: "Press mancu.", reps: "3x10" },
+                { muscle: "Piernas", name: "Hip Thrust", reps: "4x10" },
+                { muscle: "Piernas", name: "Patada Glúteo", reps: "4x10" }
+            ]},
+            3: { color: 'var(--day3)', title: 'Día 3', ejercicios: [
+                { muscle: "Dorsales", name: "Jalón pecho", reps: "4x10" },
+                { muscle: "Dorsales", name: "Pull-over", reps: "4x10" },
+                { muscle: "Dorsales", name: "Remo disco", reps: "4x10/8" },
+                { muscle: "Piernas", name: "Sent. Sumo", reps: "4x10" },
+                { muscle: "Piernas", name: "Abducción", reps: "4x10" },
+                { muscle: "Piernas", name: "Femorales", reps: "4x8" }
+            ]},
+            4: { color: 'var(--day4)', title: 'Día 4', ejercicios: [
+                { muscle: "Pectorales", name: "Press banca", reps: "4x10" },
+                { muscle: "Pectorales", name: "Pull over", reps: "4x8" },
+                { muscle: "Pectorales", name: "Peck-deck", reps: "3x10" },
+                { muscle: "Bíceps", name: "Curl alterno", reps: "3x12" },
+                { muscle: "Bíceps", name: "Curl polea", reps: "4x10" },
+                { muscle: "Tríceps", name: "Press francés", reps: "4x10" }
+            ]}
+        };
+
+        let currentDay = 1;
+        let currentUserName = "";
+        let progressData = {};
+        let weightData = {};
+        let historyData = [];
+        let exerciseAwaitingPhoto = null;
+        let timerInterval;
+
+        // Iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            setTodaysDate();
+            const savedUser = localStorage.getItem('fitapp_active_user');
+            if(savedUser) initializeAfterLogin(savedUser);
+        });
+
+        function setTodaysDate() {
+            const today = new Date();
+            document.getElementById('dateDay').textContent = today.getDate().toString().padStart(2, '0');
+            document.getElementById('dateMonth').textContent = today.toLocaleString('es-ES', { month: 'short' });
+        }
+
+        function selectUser(user) {
+            localStorage.setItem('fitapp_active_user', user);
+            initializeAfterLogin(user);
+        }
+
+        function initializeAfterLogin(user) {
+            currentUserName = user;
+            document.getElementById('userSelector').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('userNameHeader').textContent = user;
+            
+            // Cargar datos
+            progressData = JSON.parse(localStorage.getItem(`fitapp_progreso_${user}`)) || {};
+            weightData = JSON.parse(localStorage.getItem(`fitapp_pesos_${user}`)) || {};
+            historyData = JSON.parse(localStorage.getItem(`fitapp_historial_${user}`)) || [];
+            
+            const metrics = JSON.parse(localStorage.getItem(`fitapp_metricas_${user}`)) || {};
+            if(metrics.peso) document.getElementById('metPeso').value = metrics.peso;
+            if(metrics.cintura) document.getElementById('metCintura').value = metrics.cintura;
+            if(metrics.cadera) document.getElementById('metCadera').value = metrics.cadera;
+
+            updateHistoryView();
+        }
+
+        // Navegación Tabs Principales
+        function switchMainTab(tab) {
+            document.querySelectorAll('.app-view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`tab${tab}`).classList.add('active');
+            document.getElementById(`nav${tab}`).classList.add('active');
+        }
+
+        // Rutina Funciones
+        function openDay(dayNumber) {
+            currentDay = dayNumber;
+            const data = rutinas[dayNumber];
+            
+            document.getElementById('homeView').style.display = 'none';
+            document.getElementById('workoutView').classList.add('active');
+            
+            document.getElementById('currentDayTitle').textContent = data.title;
+            document.getElementById('progressBar').style.backgroundColor = data.color;
+            document.getElementById('finishBtn').style.backgroundColor = "#000"; 
+
+            if (!progressData[`day_${dayNumber}`]) {
+                progressData[`day_${dayNumber}`] = Array(data.ejercicios.length).fill(false);
+            }
+
+            renderExercises();
+            updateProgress();
+        }
+
+        function goHome() {
+            document.getElementById('workoutView').classList.remove('active');
+            setTimeout(() => { document.getElementById('homeView').style.display = 'block'; }, 100);
+        }
+
+        function triggerCamera(exerciseName) {
+            exerciseAwaitingPhoto = exerciseName;
+            document.getElementById('cameraInput').click();
+        }
+
+        async function handleImageCapture(event) {
+            const file = event.target.files[0];
+            if(!file || !exerciseAwaitingPhoto) return;
+            
+            compressPhoto(file).then(base64 => {
+                localStorage.setItem(`fitapp_foto_${exerciseAwaitingPhoto}`, base64);
+                renderExercises();
+            });
+            event.target.value = ''; 
+        }
+
+        function compressPhoto(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const size = 300; 
+                        canvas.width = size; canvas.height = size;
+                        const ctx = canvas.getContext('2d');
+                        const scale = Math.max(size / img.width, size / img.height);
+                        const x = (size - img.width * scale) / 2;
+                        const y = (size - img.height * scale) / 2;
+                        ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+                        resolve(canvas.toDataURL('image/jpeg', 0.6)); 
+                    };
+                };
+            });
+        }
+
+        function renderExercises() {
+            const data = rutinas[currentDay];
+            const list = document.getElementById('exerciseList');
+            const checks = progressData[`day_${currentDay}`];
+
+            list.innerHTML = data.ejercicios.map((ex, index) => {
+                const isDone = checks[index];
+                const savedKg = weightData[ex.name] || '';
+                const customPhoto = localStorage.getItem(`fitapp_foto_${ex.name}`);
+                const imgUrl = customPhoto ? customPhoto : (muscleImages[ex.muscle] || muscleImages["Piernas"]);
+                const checkIcon = isDone ? `<svg width="28" height="28" fill="none" stroke="#000" viewBox="0 0 24 24" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>` : '';
+                
+                return `
+                    <div class="exercise-item ${isDone ? 'done' : ''}">
+                        <div class="img-container" onclick="triggerCamera('${ex.name}')">
+                            <img src="${imgUrl}" class="ex-img" loading="lazy">
+                            <div class="cam-badge">📷</div>
+                        </div>
+                        <div class="ex-info">
+                            <div class="ex-muscle">${ex.muscle}</div>
+                            <div class="ex-name">${ex.name}</div>
+                            <div class="ex-metrics">
+                                <span class="ex-reps">${ex.reps}</span>
+                                <div class="kg-input-wrapper">
+                                    <input type="number" class="kg-input" placeholder="0" value="${savedKg}" onblur="saveWeight('${ex.name}', this.value)">
+                                    <span class="kg-label">Kg</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="checkbox" style="${isDone ? 'background: #EEE' : ''}" onclick="toggleExercise(${index})">
+                            ${checkIcon}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function saveWeight(exName, value) {
+            weightData[exName] = value;
+            localStorage.setItem(`fitapp_pesos_${currentUserName}`, JSON.stringify(weightData));
+        }
+
+        function saveMetrics() {
+            const metrics = {
+                peso: document.getElementById('metPeso').value,
+                cintura: document.getElementById('metCintura').value,
+                cadera: document.getElementById('metCadera').value
+            };
+            localStorage.setItem(`fitapp_metricas_${currentUserName}`, JSON.stringify(metrics));
+        }
+
+        function toggleExercise(index) {
+            const isNowDone = !progressData[`day_${currentDay}`][index];
+            progressData[`day_${currentDay}`][index] = isNowDone;
+            localStorage.setItem(`fitapp_progreso_${currentUserName}`, JSON.stringify(progressData));
+            
+            renderExercises();
+            updateProgress();
+
+            if(isNowDone) startRestTimer();
+        }
+
+        // Timer de Descanso (60s)
+        function startRestTimer() {
+            clearInterval(timerInterval);
+            let timeLeft = 60;
+            const timerEl = document.getElementById('restTimer');
+            const textEl = document.getElementById('timerText');
+            
+            timerEl.classList.add('active');
+            textEl.textContent = `01:00`;
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                if(timeLeft <= 0) {
+                    closeTimer();
+                    // Vibración si el celular lo permite
+                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                } else {
+                    const secs = timeLeft.toString().padStart(2, '0');
+                    textEl.textContent = `00:${secs}`;
+                }
+            }, 1000);
+        }
+
+        function closeTimer() {
+            clearInterval(timerInterval);
+            document.getElementById('restTimer').classList.remove('active');
+        }
+
+        function updateProgress() {
+            const checks = progressData[`day_${currentDay}`];
+            const total = checks.length;
+            const done = checks.filter(c => c).length;
+            const percent = (done / total) * 100;
+            
+            document.getElementById('progressBar').style.width = `${percent}%`;
+            document.getElementById('finishBtn').style.display = (percent === 100) ? 'block' : 'none';
+        }
+
+        function finishWorkout() {
+            // Guardar Historial
+            const todayStr = new Date().toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+            historyData.unshift({ date: todayStr, dayTitle: rutinas[currentDay].title });
+            localStorage.setItem(`fitapp_historial_${currentUserName}`, JSON.stringify(historyData));
+            
+            updateHistoryView();
+
+            alert(`¡Entrenamiento guardado ${currentUserName}! 💪`);
+            
+            // Reset día actual
+            progressData[`day_${currentDay}`] = Array(rutinas[currentDay].ejercicios.length).fill(false);
+            localStorage.setItem(`fitapp_progreso_${currentUserName}`, JSON.stringify(progressData));
+            
+            goHome();
+            switchMainTab('Evolucion');
+        }
+
+        function updateHistoryView() {
+            document.getElementById('streakCount').textContent = historyData.length;
+            const list = document.getElementById('historyList');
+            
+            if(historyData.length === 0) {
+                list.innerHTML = "<p style='color: #999; font-size: 14px;'>Aún no registraste entrenamientos.</p>";
+                return;
+            }
+
+            // Mostrar los últimos 10
+            list.innerHTML = historyData.slice(0, 10).map(item => `
+                <li class="history-item">
+                    ${item.date} <span>Completó ${item.dayTitle}</span>
+                </li>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
