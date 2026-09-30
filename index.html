@@ -137,11 +137,14 @@
         .progress-bar-bg { width: 100%; height: 14px; background: #EEE; border-radius: 7px; overflow: hidden; margin-top: 12px; margin-bottom: 24px;}
         .progress-bar-fill { height: 100%; width: 0%; transition: 0.3s; }
 
+        #exerciseList { display: flex; flex-direction: column; gap: 16px; }
+        
         .exercise-item { 
-            background: var(--surface); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 16px; 
+            background: var(--surface); border-radius: var(--radius-sm); padding: 16px;
             display: flex; align-items: center; border: 1px solid var(--border); box-shadow: var(--shadow); position: relative;
+            transition: all 0.4s ease;
         }
-        .exercise-item.done { opacity: 0.5; background: #FDFDFF; border-color: transparent; box-shadow: none;}
+        .exercise-item.done { opacity: 0.5; background: #FDFDFF; border-color: transparent; box-shadow: none; transform: scale(0.98);}
         
         .img-container { position: relative; width: 80px; height: 80px; margin-right: 16px; flex-shrink: 0; cursor: pointer; }
         .ex-img { width: 100%; height: 100%; border-radius: 12px; object-fit: cover; border: 1px solid #ddd; background: #F0F0F0; }
@@ -167,8 +170,8 @@
         .btn-del { background: #FFEBEE; color: #D32F2F; }
         .btn-edit-item { background: #E3F2FD; color: #1976D2; }
         
-        .btn-add-ex { width: 100%; padding: 16px; border-radius: 12px; border: 2px dashed #CCC; background: transparent; font-size: 16px; font-weight: 700; color: var(--text-muted); cursor: pointer; margin-bottom: 24px; display: none; }
-        .btn-finish { width: 100%; padding: 20px; border-radius: var(--radius-sm); font-size: 20px; font-weight: 800; color: #FFF; border: none; margin-top: 24px; display: none; box-shadow: var(--shadow); }
+        .btn-add-ex { width: 100%; padding: 16px; border-radius: 12px; border: 2px dashed #CCC; background: transparent; font-size: 16px; font-weight: 700; color: var(--text-muted); cursor: pointer; margin-top: 8px; margin-bottom: 24px; display: none; }
+        .btn-finish { width: 100%; padding: 20px; border-radius: var(--radius-sm); font-size: 20px; font-weight: 800; color: #FFF; border: none; margin-top: 24px; margin-bottom: 24px; display: none; box-shadow: var(--shadow); }
 
         /* Modales */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: 0.2s; z-index: 2000; }
@@ -200,16 +203,16 @@
 
         /* Navegación Inferior */
         .bottom-nav {
-            position: absolute; bottom: 0; left: 0; width: 100%; background: var(--surface);
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: var(--surface);
             border-top: 1px solid var(--border); display: flex; justify-content: space-around;
-            padding: 12px 0; z-index: 900; border-radius: 0 0 12px 12px;
+            padding: 12px 0; z-index: 900;
         }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer; }
         .nav-item.active { color: var(--text-main); }
 
-        /* Timer y Toast Ajustados */
+        /* Timer y Toast */
         .rest-timer {
-            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(150%);
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(150%);
             background: #000; color: #FFF; padding: 12px 24px; border-radius: 99px;
             font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 12px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000;
@@ -218,10 +221,10 @@
         .timer-close { background: #333; border: none; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer;}
 
         .toast { 
-            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); 
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); 
             background: #333; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 700; 
             box-shadow: var(--shadow); transition: 0.3s; z-index: 2000; font-size: 16px; white-space: nowrap; 
-            opacity: 0; pointer-events: none; /* Arreglo del cartel negro */
+            opacity: 0; pointer-events: none; 
         }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
     </style>
@@ -233,7 +236,6 @@
         <p style="margin-top: 16px; font-weight: 700; color: #555;">Conectando a la nube...</p>
     </div>
 
-    <!-- Sacamos el capture="environment" para que en la PC abra el buscador de archivos normal -->
     <input type="file" id="cameraInput" accept="image/*" style="display:none;" onchange="handleImageCapture(event)">
     <input type="file" id="excelInput" accept=".xlsx" style="display:none;" onchange="importExcel(event)">
 
@@ -410,7 +412,6 @@
 
         window.initAppFromFirebase = async function() {
             try {
-                // 1. Cargar Rutina e Imágenes de la Nube (Master)
                 const masterSnap = await window.fbGetDoc(window.fbDoc(window.fbDb, "fitapp", "master"));
                 if (masterSnap.exists()) {
                     const data = masterSnap.data();
@@ -423,14 +424,12 @@
 
                 document.getElementById('loader').style.display = 'none';
 
-                // 2. Verificar usuario activo
                 const savedUser = localStorage.getItem('fitapp_active_user');
                 if(savedUser) {
                     await initializeAfterLogin(savedUser);
                 } else {
                     document.getElementById('userSelector').style.display = 'flex';
                 }
-
             } catch (e) {
                 console.error("Error conectando a Firebase:", e);
                 showToast("Error de conexión a la nube");
@@ -461,7 +460,6 @@
             document.getElementById('userNameHeader').textContent = user;
             setTodaysDate();
             
-            // Cargar datos propios del usuario desde Firebase
             const userSnap = await window.fbGetDoc(window.fbDoc(window.fbDb, "fitapp", `user_${user}`));
             if(userSnap.exists()) {
                 const data = userSnap.data();
@@ -484,7 +482,6 @@
             switchMainTab('Rutina');
         }
 
-        // GUARDADO EN LA NUBE
         async function saveUserCloudData() {
             await window.fbSetDoc(window.fbDoc(window.fbDb, "fitapp", `user_${currentUserName}`), {
                 progress: progressData,
@@ -577,6 +574,7 @@
         }
 
         function openEditModal(index) {
+            // Como ordenamos el array, buscamos el ejercicio usando el originalIndex
             const ex = masterRutinas[currentDay].ejercicios[index];
             document.getElementById('modalTitle').textContent = "Editar Ejercicio";
             document.getElementById('editExIndex').value = index;
@@ -671,7 +669,7 @@
 
                 masterRutinas = newRutinas;
                 await saveMasterCloudData();
-                progressData = {}; // Resetear progreso al cambiar toda la rutina
+                progressData = {}; 
                 await saveUserCloudData();
 
                 if(document.getElementById('workoutView').classList.contains('active')) {
@@ -724,8 +722,23 @@
             const list = document.getElementById('exerciseList');
             const checks = progressData[`day_${currentDay}`];
 
-            list.innerHTML = data.ejercicios.map((ex, index) => {
-                const isDone = checks[index];
+            // 1. Mapeamos agregando el índice original para no perder la referencia real
+            let exercisesWithState = data.ejercicios.map((ex, index) => {
+                return { ...ex, originalIndex: index, isDone: checks[index] };
+            });
+
+            // 2. ORDENAMIENTO ZERO-SCROLL (Solo si no estamos en Modo Edición)
+            if(!isEditMode) {
+                exercisesWithState.sort((a, b) => {
+                    if (a.isDone === b.isDone) return a.originalIndex - b.originalIndex; // Respetar orden original entre los pendientes
+                    return a.isDone ? 1 : -1; // Mandar los "Terminados" (true) al fondo (1)
+                });
+            }
+
+            // 3. Renderizamos usando el array ordenado
+            list.innerHTML = exercisesWithState.map((ex) => {
+                const index = ex.originalIndex; // Clave para que los botones sepan a quién modificar
+                const isDone = ex.isDone;
                 const savedKg = weightData[ex.name] || '';
                 
                 const cloudPhoto = masterImages[ex.name];
@@ -796,6 +809,7 @@
             const isNowDone = !progressData[`day_${currentDay}`][index];
             progressData[`day_${currentDay}`][index] = isNowDone;
             
+            // Re-renderiza para aplicar el Zero-Scroll inmediatamente
             renderExercises();
             updateProgress();
             await saveUserCloudData();
