@@ -31,17 +31,30 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        body { background-color: var(--bg-light); color: var(--text-main); line-height: 1.4; padding-bottom: 80px; }
+        /* Ajuste para que en PC se vea como un celular centrado */
+        html { background-color: #ECEFF1; }
+        body { 
+            background-color: var(--bg-light); 
+            color: var(--text-main); 
+            line-height: 1.4; 
+            padding-bottom: 80px;
+            max-width: 500px; /* Límite tamaño celular */
+            margin: 0 auto;   /* Centrado en pantalla */
+            min-height: 100vh;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
 
         /* Login */
         #userSelector {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            position: fixed; top: 0; left: 50%; transform: translateX(-50%); 
+            width: 100%; max-width: 500px; height: 100%; 
             background: var(--bg-light); z-index: 1000; display: flex; 
             flex-direction: column; align-items: center; justify-content: center; padding: 40px;
         }
         #userSelector h2 { font-size: 32px; font-weight: 800; margin-bottom: 40px; text-align: center; }
         .user-btn {
-            width: 100%; max-width: 300px; padding: 20px; background: var(--surface); 
+            width: 100%; padding: 20px; background: var(--surface); 
             border: 2px solid var(--border); border-radius: var(--radius-sm); 
             margin-bottom: 16px; font-size: 20px; font-weight: 800; cursor: pointer; 
             box-shadow: var(--shadow); transition: 0.2s; text-align: center;
@@ -113,7 +126,6 @@
         .ex-muscle { font-size: 12px; text-transform: uppercase; font-weight: 800; color: var(--text-muted); margin-bottom: 2px; }
         .ex-name { font-size: 18px; font-weight: 800; margin-bottom: 6px; line-height: 1.1; }
         
-        /* Nuevo Campo de Indicaciones */
         .ex-hint { font-size: 13px; font-weight: 600; color: #1565C0; background: #E3F2FD; padding: 6px 10px; border-radius: 6px; margin-bottom: 8px; display: inline-block;}
         
         .ex-metrics { display: flex; align-items: center; gap: 12px; }
@@ -164,16 +176,16 @@
 
         .btn-logout { width: 100%; padding: 14px; background: #FFEBEE; color: #D32F2F; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 24px; }
 
-        /* Navegación Inferior */
+        /* Navegación Inferior (Ajustada para PC) */
         .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%; background: var(--surface);
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: var(--surface);
             border-top: 1px solid var(--border); display: flex; justify-content: space-around;
-            padding: 12px 0; z-index: 900;
+            padding: 12px 0; z-index: 900; border-radius: 0 0 12px 12px;
         }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer; }
         .nav-item.active { color: var(--text-main); }
 
-        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 700; box-shadow: var(--shadow); transition: 0.3s; z-index: 2000; font-size: 16px; }
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 700; box-shadow: var(--shadow); transition: 0.3s; z-index: 2000; font-size: 16px; white-space: nowrap; }
         .toast.show { transform: translateX(-50%) translateY(0); }
     </style>
 </head>
@@ -253,7 +265,6 @@
                     <button class="edit-btn" id="btnToggleEdit" onclick="toggleEditMode()">✏️ Editar</button>
                 </div>
                 
-                <!-- Barra de Excel (Se muestra solo al Editar) -->
                 <div class="excel-toolbar" id="excelToolbar">
                     <button class="btn-excel down" onclick="downloadExcelTemplate()">📥 Bajar Modelo Excel</button>
                     <button class="btn-excel up" onclick="document.getElementById('excelInput').click()">⬆️ Subir Excel</button>
@@ -292,6 +303,7 @@
             </div>
         </div>
 
+        <!-- NAVEGACIÓN INFERIOR -->
         <div class="bottom-nav">
             <div class="nav-item active" id="navRutina" onclick="switchMainTab('Rutina')">
                 <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
@@ -310,10 +322,12 @@
     <script>
         const localImagesMap = {
             "Prensa": "prensa.png",
+            "Extensiones en maquina": "extenciones maquina.png",
             "Extensiones máquina": "extenciones maquina.png",
             "Extensiones": "extenciones maquina.png",
             "Gemelos sentado": "gemelos sentado.png",
             "Gemelos": "gemelos sentado.png",
+            "Tirones en polea con barra": "tirones polea.png",
             "Tirones polea (Barra)": "tirones polea.png",
             "Tirones polea": "tirones polea.png",
             "Tirones tras nuca": "tirones nuca.png",
@@ -322,6 +336,7 @@
             "Elevación lateral (Máq.)": "elevacion lateral en maquina.png",
             "Vuelos": "posterior en polea.png",
             "Press mancu.": "press mancuerna.png",
+            "Press sentado": "press mancuerna.png",
             "Hip Thrust": "hip thrust.png",
             "Patada Glúteo": "patada de gluteo en polea.png",
             "Jalón pecho": "jalon al pecho.png",
@@ -345,21 +360,21 @@
 
         const defaultRutinas = {
             1: { color: 'var(--day1)', title: 'Día 1', ejercicios: [
-                { muscle: "Piernas", name: "Prensa", reps: "4x10", indicaciones: "Bajar lento, no trabar rodillas arriba" },
+                { muscle: "Piernas", name: "Prensa", reps: "4x10", indicaciones: "Bajar lento" },
                 { muscle: "Piernas", name: "Extensiones", reps: "4x10", indicaciones: "" },
                 { muscle: "Tríceps", name: "Tirones polea", reps: "4x10", indicaciones: "Codos pegados a las costillas" }
             ]},
             2: { color: 'var(--day2)', title: 'Día 2', ejercicios: [
-                { muscle: "Hombros", name: "Elev. lateral", reps: "4x10", indicaciones: "Subir hasta la altura de los hombros" },
-                { muscle: "Piernas", name: "Hip Thrust", reps: "4x10", indicaciones: "Apretar glúteos arriba 1 segundo" }
+                { muscle: "Hombros", name: "Elev. lateral", reps: "4x10", indicaciones: "" },
+                { muscle: "Piernas", name: "Hip Thrust", reps: "4x10", indicaciones: "Apretar glúteos arriba" }
             ]},
             3: { color: 'var(--day3)', title: 'Día 3', ejercicios: [
                 { muscle: "Dorsales", name: "Jalón pecho", reps: "4x10", indicaciones: "Sacar pecho al bajar" },
-                { muscle: "Piernas", name: "Sent. Sumo", reps: "4x10", indicaciones: "Punta de los pies hacia afuera" }
+                { muscle: "Piernas", name: "Sent. Sumo", reps: "4x10", indicaciones: "" }
             ]},
             4: { color: 'var(--day4)', title: 'Día 4', ejercicios: [
                 { muscle: "Pectorales", name: "Press inclinado", reps: "4x10", indicaciones: "" },
-                { muscle: "Bíceps", name: "Curl alterno", reps: "3x12", indicaciones: "No balancear la espalda" }
+                { muscle: "Bíceps", name: "Curl alterno", reps: "3x12", indicaciones: "" }
             ]}
         };
 
@@ -414,7 +429,7 @@
             if(metrics.cadera) document.getElementById('metCadera').value = metrics.cadera;
 
             updateHistoryView();
-            goHome(); // Resetea a la vista principal
+            goHome(); 
             switchMainTab('Rutina');
         }
 
@@ -537,10 +552,9 @@
             }
         }
 
-        // --- SISTEMA EXCEL (IMPORT/EXPORT MASIVO) ---
+        // --- SISTEMA EXCEL (GUARDADO MASIVO PARA LAS 3) ---
         function downloadExcelTemplate() {
             let templateData = [];
-            // Rellenar con la rutina actual de este usuario
             for(let d=1; d<=4; d++) {
                 if(userRutinas[d] && userRutinas[d].ejercicios) {
                     userRutinas[d].ejercicios.forEach(ex => {
@@ -554,7 +568,6 @@
                     });
                 }
             }
-            // Si estaba vacía, mandamos un renglón de ejemplo
             if(templateData.length === 0) {
                 templateData = [{ Dia: 1, Musculo: "Piernas", Ejercicio: "Prensa", Repeticiones: "4x10", Indicaciones: "Bajar lento" }];
             }
@@ -562,7 +575,7 @@
             const ws = XLSX.utils.json_to_sheet(templateData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Rutina");
-            XLSX.writeFile(wb, `Rutina_${currentUserName}.xlsx`);
+            XLSX.writeFile(wb, `Rutina_Base.xlsx`);
         }
 
         function importExcel(event) {
@@ -575,7 +588,6 @@
                 const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
                 if (json.length === 0) return;
 
-                // Resetear la rutina temporalmente
                 const newRutinas = {
                     1: { color: 'var(--day1)', title: 'Día 1', ejercicios: [] },
                     2: { color: 'var(--day2)', title: 'Día 2', ejercicios: [] },
@@ -595,23 +607,26 @@
                     }
                 });
 
-                // Guardar la nueva rutina para este usuario
+                // ESTA ES LA MAGIA: Guardar la misma rutina a las 3 de un plumazo
+                const usuarias = ['Mariana', 'Silvana', 'Mariela'];
+                usuarias.forEach(u => {
+                    localStorage.setItem(`fitapp_rutinas_${u}`, JSON.stringify(newRutinas));
+                    // Opcional: Reiniciar el progreso al cambiar de rutina
+                    localStorage.setItem(`fitapp_progreso_${u}`, JSON.stringify({}));
+                });
+
+                // Actualizar la vista actual
                 userRutinas = newRutinas;
-                localStorage.setItem(`fitapp_rutinas_${currentUserName}`, JSON.stringify(userRutinas));
-
-                // Reiniciar el progreso
                 progressData = {};
-                localStorage.setItem(`fitapp_progreso_${currentUserName}`, JSON.stringify(progressData));
-
-                showToast(`Rutina importada para ${currentUserName} 🚀`);
+                
+                showToast(`¡Rutina aplicada para las 3! 🚀`);
                 if(document.getElementById('workoutView').classList.contains('active')) {
-                    openDay(currentDay); // Recargar la vista actual
+                    openDay(currentDay);
                 }
             };
             reader.readAsArrayBuffer(file);
             event.target.value = '';
         }
-        // --- FIN SISTEMA EXCEL ---
 
         function triggerCamera(exerciseName) {
             if(isEditMode) return; 
@@ -655,9 +670,14 @@
                 const isDone = checks[index];
                 const savedKg = weightData[ex.name] || '';
                 
+                // Mapeo Inteligente (Busca variaciones en los nombres de las fotos)
                 const customPhoto = localStorage.getItem(`fitapp_foto_${ex.name}`);
-                const localPhoto = localImagesMap[ex.name] ? `./${localImagesMap[ex.name]}` : null;
+                
+                // Limpiamos un poco el nombre para encontrar la foto local más fácil
+                let nombreLimpio = ex.name.trim();
+                const localPhoto = localImagesMap[nombreLimpio] ? `./${localImagesMap[nombreLimpio]}` : null;
                 const fallback = muscleImages[ex.muscle] || muscleImages["Piernas"];
+                
                 const imgUrl = customPhoto ? customPhoto : (localPhoto ? localPhoto : fallback);
                 
                 const checkIcon = isDone ? `<svg width="28" height="28" fill="none" stroke="#000" viewBox="0 0 24 24" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>` : '';
