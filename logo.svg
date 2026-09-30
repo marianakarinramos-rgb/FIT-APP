@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Fondo blanco/marfil de la app -->
+  <rect width="512" height="512" rx="115" fill="#FFFFFF"/>
+  
+  <!-- Estrellitas decorativas superiores -->
+  <!-- Estrella izq superior -->
+  <path d="M 145 95 Q 145 115 125 115 Q 145 115 145 135 Q 145 115 165 115 Q 145 115 145 95 Z" fill="#F6AD55"/>
+  <!-- Estrella izq inferior -->
+  <path d="M 115 135 Q 115 147 103 147 Q 115 147 115 159 Q 115 147 127 147 Q 115 147 115 135 Z" fill="#FEB2B2"/>
+  <!-- Estrella der superior -->
+  <path d="M 375 95 Q 375 115 355 115 Q 375 115 375 135 Q 375 115 395 115 Q 375 115 375 95 Z" fill="#F6AD55"/>
+  <!-- Estrella der inferior -->
+  <path d="M 405 135 Q 405 147 393 147 Q 405 147 405 159 Q 405 147 417 147 Q 405 147 405 135 Z" fill="#FEB2B2"/>
+
+  <!-- Mancuerna Kawaii Central -->
+  <!-- Barra central -->
+  <rect x="180" y="230" width="152" height="36" rx="18" fill="#FCA5A5"/>
+  <rect x="200" y="240" width="112" height="16" rx="8" fill="#FEB2B2"/>
+
+  <!-- Discos izquierdos -->
+  <rect x="156" y="200" width="28" height="96" rx="14" fill="#F48FB1"/>
+  <rect x="124" y="170" width="28" height="156" rx="14" fill="#FF85A1"/>
+
+  <!-- Discos derechos -->
+  <rect x="328" y="200" width="28" height="96" rx="14" fill="#F48FB1"/>
+  <rect x="360" y="170" width="28" height="156" rx="14" fill="#FF85A1"/>
+
+  <!-- Texto FIT-APP minimalista y limpio -->
+  <text x="256" y="390" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="52" font-weight="900" fill="#FF7E7E" text-anchor="middle" letter-spacing="4">FIT-APP</text>
+</svg>
