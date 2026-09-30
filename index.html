@@ -294,6 +294,32 @@
     </div>
 
     <script>
+        // Mapeo automático a las fotos de tu carpeta local
+        const localImagesMap = {
+            "Prensa": "prensa.png",
+            "Extensiones máquina": "extenciones maquina.png",
+            "Extensiones": "extenciones maquina.png",
+            "Gemelos sentado": "gemelos sentado.png",
+            "Gemelos": "gemelos sentado.png",
+            "Tirones polea (Barra)": "tirones polea.png",
+            "Tirones polea": "tirones polea.png",
+            "Tirones tras nuca": "tirones nuca.png",
+            "Tirones nuca": "tirones nuca.png",
+            "Elev. lateral": "elevacion lateral en maquina.png",
+            "Elevación lateral (Máq.)": "elevacion lateral en maquina.png",
+            "Vuelos": "posterior en polea.png",
+            "Press mancu.": "press mancuerna.png",
+            "Hip Thrust": "hip thrust.png",
+            "Patada Glúteo": "patada de gluteo en polea.png",
+            "Jalón pecho": "jalon al pecho.png",
+            "Pull-over": "pull over.png",
+            "Pull over": "pull over.png",
+            "Remo disco": "remo bajo polea.png",
+            "Sent. Sumo": "sentadilla sumo.png",
+            "Abducción": "abduccion.png",
+            "Femorales": "femorales.png"
+        };
+
         const muscleImages = {
             "Piernas": "https://images.unsplash.com/photo-1434682881908-b43d0467b798?w=200&q=80",
             "Tríceps": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200&q=80",
@@ -304,14 +330,13 @@
             "Bíceps": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=200&q=80"
         };
 
-        // Plantilla Base
         const defaultRutinas = {
             1: { color: 'var(--day1)', title: 'Día 1', ejercicios: [
                 { muscle: "Piernas", name: "Prensa", reps: "4x10" },
-                { muscle: "Piernas", name: "Extensiones máquina", reps: "4x10" },
-                { muscle: "Piernas", name: "Gemelos sentado", reps: "4x10" },
-                { muscle: "Tríceps", name: "Tirones polea (Barra)", reps: "4x10" },
-                { muscle: "Tríceps", name: "Tirones tras nuca", reps: "4x12" }
+                { muscle: "Piernas", name: "Extensiones", reps: "4x10" },
+                { muscle: "Piernas", name: "Gemelos", reps: "4x10" },
+                { muscle: "Tríceps", name: "Tirones polea", reps: "4x10" },
+                { muscle: "Tríceps", name: "Tirones nuca", reps: "4x12" }
             ]},
             2: { color: 'var(--day2)', title: 'Día 2', ejercicios: [
                 { muscle: "Hombros", name: "Elev. lateral", reps: "4x10" },
@@ -373,7 +398,6 @@
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('userNameHeader').textContent = user;
             
-            // Cargar Rutina Personalizada del Usuario o la Base
             const savedRutinas = localStorage.getItem(`fitapp_rutinas_${user}`);
             userRutinas = savedRutinas ? JSON.parse(savedRutinas) : JSON.parse(JSON.stringify(defaultRutinas));
             
@@ -411,7 +435,6 @@
                 progressData[`day_${dayNumber}`] = Array(data.ejercicios.length).fill(false);
             }
 
-            // Asegurarse de que el modo edición arranque apagado
             isEditMode = false;
             document.getElementById('btnToggleEdit').classList.remove('active');
             document.getElementById('btnAddEx').style.display = 'none';
@@ -425,7 +448,6 @@
             setTimeout(() => { document.getElementById('homeView').style.display = 'block'; }, 100);
         }
 
-        // --- SISTEMA DE EDICIÓN ---
         function toggleEditMode() {
             isEditMode = !isEditMode;
             const btn = document.getElementById('btnToggleEdit');
@@ -436,7 +458,7 @@
                 btn.classList.add('active');
                 btn.textContent = "💾 Terminar Edición";
                 btnAdd.style.display = 'block';
-                progBar.style.display = 'none'; // Oculto barra para no molestar
+                progBar.style.display = 'none'; 
             } else {
                 btn.classList.remove('active');
                 btn.textContent = "✏️ Editar";
@@ -478,15 +500,12 @@
             if(!name) return alert("Ponle un nombre al ejercicio");
 
             if(index === -1) {
-                // Nuevo
                 userRutinas[currentDay].ejercicios.push({ muscle, name, reps });
                 progressData[`day_${currentDay}`].push(false);
             } else {
-                // Editar
                 userRutinas[currentDay].ejercicios[index] = { muscle, name, reps };
             }
 
-            // Guardar rutina en localStorage
             localStorage.setItem(`fitapp_rutinas_${currentUserName}`, JSON.stringify(userRutinas));
             localStorage.setItem(`fitapp_progreso_${currentUserName}`, JSON.stringify(progressData));
             
@@ -504,11 +523,9 @@
                 renderExercises();
             }
         }
-        // --- FIN SISTEMA DE EDICIÓN ---
-
 
         function triggerCamera(exerciseName) {
-            if(isEditMode) return; // No abrir cámara si estamos editando
+            if(isEditMode) return; 
             exerciseAwaitingPhoto = exerciseName;
             document.getElementById('cameraInput').click();
         }
@@ -554,11 +571,16 @@
             list.innerHTML = data.ejercicios.map((ex, index) => {
                 const isDone = checks[index];
                 const savedKg = weightData[ex.name] || '';
+                
+                // Lógica puente para las fotos
                 const customPhoto = localStorage.getItem(`fitapp_foto_${ex.name}`);
-                const imgUrl = customPhoto ? customPhoto : (muscleImages[ex.muscle] || muscleImages["Piernas"]);
+                const localPhoto = localImagesMap[ex.name] ? `./${localImagesMap[ex.name]}` : null;
+                const fallback = muscleImages[ex.muscle] || muscleImages["Piernas"];
+                
+                const imgUrl = customPhoto ? customPhoto : (localPhoto ? localPhoto : fallback);
+                
                 const checkIcon = isDone ? `<svg width="28" height="28" fill="none" stroke="#000" viewBox="0 0 24 24" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>` : '';
                 
-                // Si estamos en modo edición, cambiamos el tilde por botones de control
                 let controlHTML = '';
                 if(isEditMode) {
                     controlHTML = `
@@ -578,7 +600,7 @@
                 return `
                     <div class="exercise-item ${isDone && !isEditMode ? 'done' : ''}">
                         <div class="img-container" onclick="triggerCamera('${ex.name}')">
-                            <img src="${imgUrl}" class="ex-img" loading="lazy">
+                            <img src="${imgUrl}" class="ex-img" loading="lazy" onerror="this.src='${fallback}'">
                             ${!isEditMode ? '<div class="cam-badge">📷</div>' : ''}
                         </div>
                         <div class="ex-info">
