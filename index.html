@@ -103,12 +103,13 @@
         .date-badge .day { font-size: 20px; font-weight: 800; color: var(--text-main); }
         .date-badge .month { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
 
-        /* Grilla Días */
+        /* Grilla Días (Auto-Highlight "Apto Pelotudos") */
         .days-grid { display: grid; grid-template-columns: 1fr; gap: 16px; padding: 20px; }
         .day-card { 
             background: var(--surface); border-radius: var(--radius-lg); padding: 24px; 
             border: 1px solid var(--border); cursor: pointer; box-shadow: var(--shadow); 
             position: relative; overflow: hidden; min-height: 120px; display: flex; flex-direction: column; justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .day-card::after { content: ''; position: absolute; left: 0; top: 0; width: 10px; height: 100%; }
         .day-num { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
@@ -117,6 +118,22 @@
         .day-card.d2::after { background-color: var(--day2); } 
         .day-card.d3::after { background-color: var(--day3); } 
         .day-card.d4::after { background-color: var(--day4); } 
+
+        /* Highlight Mágico */
+        .day-card.next-up {
+            border: 3px solid #000;
+            transform: scale(1.02);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+        .day-card.next-up::before {
+            content: '👉 TE TOCA HOY';
+            position: absolute;
+            top: 16px; right: 16px;
+            background: #000; color: #FFF;
+            font-size: 11px; font-weight: 800; padding: 6px 12px; border-radius: 99px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
         /* Ejercicios */
         .routine-container { display: none; padding: 0 16px; }
@@ -195,29 +212,31 @@
         .streak-num { font-size: 36px; font-weight: 900; line-height: 1; }
         .streak-text { font-size: 14px; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px;}
 
-        .history-list { list-style: none; }
+        /* Registro Rápido (Modo Dios) */
+        .manual-history-box { background: #F9F9F9; padding: 20px; border-radius: 16px; margin-top: 20px; border: 1px solid #EEE;}
+        .manual-history-box h4 { font-size: 16px; font-weight: 800; margin-bottom: 4px; color: var(--text-main); }
+        .quick-history-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+        .btn-quick-hist { background: #FFF; border: 2px solid #DDD; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; color: var(--text-main); transition: 0.2s; box-shadow: var(--shadow); }
+        .btn-quick-hist:active { transform: scale(0.95); background: #F0F0F0; }
+
+        .history-list { list-style: none; margin-top: 20px; }
         .history-item { padding: 12px 0; border-bottom: 1px solid #F0F0F0; display: flex; justify-content: space-between; align-items: center;}
         .history-item-date { font-size: 15px; font-weight: 800; color: var(--text-main); }
         .history-item-desc { color: var(--text-muted); font-size: 13px; font-weight: 600;}
         .btn-delete-history { background: transparent; border: none; color: #D32F2F; font-size: 20px; cursor: pointer; padding: 4px; }
 
-        .btn-logout { width: 100%; padding: 14px; background: #FFEBEE; color: #D32F2F; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 24px; }
-
-        /* Controles Historial Manual */
-        .manual-history-box { background: #F9F9F9; padding: 16px; border-radius: 12px; margin-top: 20px; border: 1px solid #EEE;}
-        .manual-history-box h4 { font-size: 14px; font-weight: 800; margin-bottom: 12px; color: var(--text-muted); }
-        .manual-history-flex { display: flex; gap: 8px; }
+        .btn-logout { width: 100%; padding: 16px; background: #FFEBEE; color: #D32F2F; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 24px; }
 
         /* Navegación Inferior */
         .bottom-nav {
-            position: absolute; bottom: 0; left: 0; width: 100%; background: var(--surface);
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: var(--surface);
             border-top: 1px solid var(--border); display: flex; justify-content: space-around;
-            padding: 12px 0; z-index: 900; border-radius: 0 0 12px 12px;
+            padding: 12px 0; z-index: 900;
         }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer; }
         .nav-item.active { color: var(--text-main); }
 
-        /* Timer y Toast Ajustados */
+        /* Timer y Toast */
         .rest-timer {
             position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(150%);
             background: #000; color: #FFF; padding: 12px 24px; border-radius: 99px;
@@ -301,10 +320,10 @@
         <div id="tabRutina" class="app-view active">
             <div id="homeView">
                 <div class="days-grid">
-                    <div class="day-card d1" onclick="openDay(1)"><div class="day-num">DÍA 1</div><div class="day-desc">Piernas / Tríceps</div></div>
-                    <div class="day-card d2" onclick="openDay(2)"><div class="day-num">DÍA 2</div><div class="day-desc">Hombros / Glúteos</div></div>
-                    <div class="day-card d3" onclick="openDay(3)"><div class="day-num">DÍA 3</div><div class="day-desc">Dorsales / Piernas</div></div>
-                    <div class="day-card d4" onclick="openDay(4)"><div class="day-num">DÍA 4</div><div class="day-desc">Pectorales / Bíceps</div></div>
+                    <div class="day-card d1" id="cardD1" onclick="openDay(1)"><div class="day-num">DÍA 1</div><div class="day-desc">Piernas / Tríceps</div></div>
+                    <div class="day-card d2" id="cardD2" onclick="openDay(2)"><div class="day-num">DÍA 2</div><div class="day-desc">Hombros / Glúteos</div></div>
+                    <div class="day-card d3" id="cardD3" onclick="openDay(3)"><div class="day-num">DÍA 3</div><div class="day-desc">Dorsales / Piernas</div></div>
+                    <div class="day-card d4" id="cardD4" onclick="openDay(4)"><div class="day-num">DÍA 4</div><div class="day-desc">Pectorales / Bíceps</div></div>
                 </div>
             </div>
 
@@ -343,7 +362,6 @@
                 </div>
 
                 <h3>Mis Datos</h3>
-                <!-- NUEVO: Campo de Descanso configurable -->
                 <div class="metric-row">
                     <div class="metric-label">Descanso (segs)</div>
                     <div><input type="number" class="metric-input" id="metDescanso" placeholder="60" onblur="saveMetrics()"> s</div>
@@ -354,23 +372,21 @@
             </div>
 
             <div class="profile-section">
-                <h3>Últimos Entrenamientos</h3>
-                <ul class="history-list" id="historyList"></ul>
                 
-                <!-- NUEVO: Formulario para inyectar historial viejo -->
+                <!-- Registro Rápido "Modo Dios" -->
                 <div class="manual-history-box">
-                    <h4>➕ Registrar día anterior:</h4>
-                    <div class="manual-history-flex">
-                        <input type="date" id="manualDate" class="form-control" style="padding: 8px;">
-                        <select id="manualDay" class="form-control" style="padding: 8px;">
-                            <option value="Día 1">Día 1</option>
-                            <option value="Día 2">Día 2</option>
-                            <option value="Día 3">Día 3</option>
-                            <option value="Día 4">Día 4</option>
-                        </select>
-                        <button class="btn-modal-save" style="margin-top:0; padding: 8px 16px;" onclick="addManualHistory()">Agregar</button>
+                    <h4>⚡ Registro Rápido (Anti-Olvidos)</h4>
+                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Tocá el día que ya hiciste para ponerte al día al instante:</p>
+                    <div class="quick-history-grid">
+                        <button class="btn-quick-hist" onclick="quickAddHistory(1)">✔️ Completé Día 1</button>
+                        <button class="btn-quick-hist" onclick="quickAddHistory(2)">✔️ Completé Día 2</button>
+                        <button class="btn-quick-hist" onclick="quickAddHistory(3)">✔️ Completé Día 3</button>
+                        <button class="btn-quick-hist" onclick="quickAddHistory(4)">✔️ Completé Día 4</button>
                     </div>
                 </div>
+
+                <h3 style="margin-top: 32px;">Últimos Entrenamientos</h3>
+                <ul class="history-list" id="historyList"></ul>
 
                 <button class="btn-logout" onclick="logout()">Cerrar Sesión / Cambiar Usuario</button>
             </div>
@@ -535,10 +551,10 @@
                 document.getElementById('metDescanso').value = '60';
             }
 
-            // Ordenar historial por fecha real (timestamp) para que no se mezcle
             historyData.sort((a, b) => b.ts - a.ts);
 
             updateHistoryView();
+            updateNextDayHighlight();
             goHome(); 
             switchMainTab('Rutina');
         }
@@ -569,6 +585,28 @@
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab${tab}`).classList.add('active');
             document.getElementById(`nav${tab}`).classList.add('active');
+            
+            if(tab === 'Rutina') updateNextDayHighlight();
+        }
+
+        // Lógica de Iluminación Automática
+        function updateNextDayHighlight() {
+            document.querySelectorAll('.day-card').forEach(el => el.classList.remove('next-up'));
+            let nextDay = 1;
+            
+            if(historyData.length > 0 && historyData[0].dayNum) {
+                nextDay = historyData[0].dayNum + 1;
+                if(nextDay > 4) nextDay = 1;
+            } else if (historyData.length > 0) {
+                const t = historyData[0].dayTitle;
+                if(t.includes('1')) nextDay = 2;
+                else if(t.includes('2')) nextDay = 3;
+                else if(t.includes('3')) nextDay = 4;
+                else nextDay = 1;
+            }
+            
+            const targetCard = document.getElementById(`cardD${nextDay}`);
+            if(targetCard) targetCard.classList.add('next-up');
         }
 
         function openDay(dayNumber) {
@@ -599,6 +637,7 @@
 
         function goHome() {
             document.getElementById('workoutView').classList.remove('active');
+            updateNextDayHighlight();
             setTimeout(() => { document.getElementById('homeView').style.display = 'block'; }, 100);
         }
 
@@ -622,7 +661,7 @@
                 excelTool.classList.remove('active');
                 progBar.style.display = 'block';
             }
-            renderExercises();
+            renderExercises(); // Se reordena automáticamente (cero scroll apaga/prende)
         }
 
         function openAddModal() {
@@ -787,6 +826,7 @@
                 return { ...ex, originalIndex: index, isDone: checks[index] };
             });
 
+            // Lógica Zero-Scroll
             if(!isEditMode) {
                 exercisesWithState.sort((a, b) => {
                     if (a.isDone === b.isDone) return a.originalIndex - b.originalIndex; 
@@ -921,12 +961,13 @@
 
         async function finishWorkout() {
             const todayStr = new Date().toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
-            historyData.unshift({ date: todayStr, dayTitle: masterRutinas[currentDay].title, ts: Date.now() });
+            historyData.unshift({ date: todayStr, dayTitle: masterRutinas[currentDay].title, dayNum: currentDay, ts: Date.now() });
             
             progressData[`day_${currentDay}`] = Array(masterRutinas[currentDay].ejercicios.length).fill(false);
             
             await saveUserCloudData();
             updateHistoryView();
+            updateNextDayHighlight();
 
             alert(`¡Entrenamiento completado ${currentUserName}! 💪`);
             
@@ -934,21 +975,20 @@
             switchMainTab('Evolucion');
         }
 
-        async function addManualHistory() {
-            const dateVal = document.getElementById('manualDate').value;
-            const dayVal = document.getElementById('manualDay').value;
-            if(!dateVal) return alert("Por favor elegí una fecha.");
+        // Registro Rápido (Máquina del Tiempo)
+        async function quickAddHistory(dayNum) {
+            const dayTitle = masterRutinas[dayNum].title;
+            // Simulamos que lo hizo "ayer" restando tiempo según la cantidad de historial
+            const ts = Date.now() - (1000 * 60 * 60 * 24); 
+            const dateStr = new Date(ts).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
             
-            // Forzar zona horaria local para que no cambie el día
-            const dateObj = new Date(dateVal + 'T12:00:00'); 
-            const dateStr = dateObj.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
-            
-            historyData.unshift({ date: dateStr, dayTitle: dayVal, ts: dateObj.getTime() });
-            historyData.sort((a, b) => b.ts - a.ts); // Ordenar siempre por fecha
+            historyData.unshift({ date: dateStr, dayTitle: dayTitle, dayNum: dayNum, ts: ts });
+            historyData.sort((a, b) => b.ts - a.ts); 
             
             await saveUserCloudData();
             updateHistoryView();
-            showToast("Registro pasado guardado 🚀");
+            updateNextDayHighlight();
+            showToast(`¡${dayTitle} registrado al instante! 🚀`);
         }
 
         async function deleteHistory(index) {
@@ -956,6 +996,7 @@
                 historyData.splice(index, 1);
                 await saveUserCloudData();
                 updateHistoryView();
+                updateNextDayHighlight();
                 showToast("Registro borrado");
             }
         }
