@@ -11,6 +11,31 @@
     <!-- SheetJS para Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAv7UWA2hPnNI_0X9aoMnA5elBJYgO4K40",
+            authDomain: "los-nonos-7f46c.firebaseapp.com",
+            projectId: "los-nonos-7f46c",
+            storageBucket: "los-nonos-7f46c.firebasestorage.app",
+            messagingSenderId: "40107629073",
+            appId: "1:40107629073:web:a8c209fdc9d2d0ebba6fb0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.fbDb = db;
+        window.fbSetDoc = setDoc;
+        window.fbDoc = doc;
+        window.fbGetDoc = getDoc;
+        
+        if(window.initAppFromFirebase) window.initAppFromFirebase();
+    </script>
+
     <style>
         :root {
             --bg-light: #FDFDFF;
@@ -31,24 +56,15 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        /* Ajuste para que en PC se vea como un celular centrado */
         html { background-color: #ECEFF1; }
         body { 
-            background-color: var(--bg-light); 
-            color: var(--text-main); 
-            line-height: 1.4; 
-            padding-bottom: 80px;
-            max-width: 500px; /* Límite tamaño celular */
-            margin: 0 auto;   /* Centrado en pantalla */
-            min-height: 100vh;
-            position: relative;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            background-color: var(--bg-light); color: var(--text-main); line-height: 1.4; padding-bottom: 80px;
+            max-width: 500px; margin: 0 auto; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
 
         /* Login */
         #userSelector {
-            position: fixed; top: 0; left: 50%; transform: translateX(-50%); 
-            width: 100%; max-width: 500px; height: 100%; 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: var(--bg-light); z-index: 1000; display: flex; 
             flex-direction: column; align-items: center; justify-content: center; padding: 40px;
         }
@@ -59,6 +75,15 @@
             margin-bottom: 16px; font-size: 20px; font-weight: 800; cursor: pointer; 
             box-shadow: var(--shadow); transition: 0.2s; text-align: center;
         }
+
+        /* Loading */
+        #loader {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: var(--bg-light); z-index: 2000; display: flex; 
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+        .spinner { border: 4px solid rgba(0,0,0,0.1); border-left-color: #000; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* App Core */
         .app-view { display: none; animation: fadeIn 0.3s ease; }
@@ -93,7 +118,7 @@
         .day-card.d3::after { background-color: var(--day3); } 
         .day-card.d4::after { background-color: var(--day4); } 
 
-        /* Ejercicios y Rutina */
+        /* Ejercicios */
         .routine-container { display: none; padding: 0 16px; }
         .routine-container.active { display: block; }
         
@@ -119,13 +144,12 @@
         .exercise-item.done { opacity: 0.5; background: #FDFDFF; border-color: transparent; box-shadow: none;}
         
         .img-container { position: relative; width: 80px; height: 80px; margin-right: 16px; flex-shrink: 0; cursor: pointer; }
-        .ex-img { width: 100%; height: 100%; border-radius: 12px; object-fit: cover; border: 1px solid #ddd; }
+        .ex-img { width: 100%; height: 100%; border-radius: 12px; object-fit: cover; border: 1px solid #ddd; background: #F0F0F0; }
         .cam-badge { position: absolute; bottom: -5px; right: -5px; background: #000; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 2px solid white; }
         
         .ex-info { flex: 1; min-width: 0; }
         .ex-muscle { font-size: 12px; text-transform: uppercase; font-weight: 800; color: var(--text-muted); margin-bottom: 2px; }
         .ex-name { font-size: 18px; font-weight: 800; margin-bottom: 6px; line-height: 1.1; }
-        
         .ex-hint { font-size: 13px; font-weight: 600; color: #1565C0; background: #E3F2FD; padding: 6px 10px; border-radius: 6px; margin-bottom: 8px; display: inline-block;}
         
         .ex-metrics { display: flex; align-items: center; gap: 12px; }
@@ -144,10 +168,9 @@
         .btn-edit-item { background: #E3F2FD; color: #1976D2; }
         
         .btn-add-ex { width: 100%; padding: 16px; border-radius: 12px; border: 2px dashed #CCC; background: transparent; font-size: 16px; font-weight: 700; color: var(--text-muted); cursor: pointer; margin-bottom: 24px; display: none; }
-        
         .btn-finish { width: 100%; padding: 20px; border-radius: var(--radius-sm); font-size: 20px; font-weight: 800; color: #FFF; border: none; margin-top: 24px; display: none; box-shadow: var(--shadow); }
 
-        /* Modal Editor de Ejercicio */
+        /* Modales */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: 0.2s; z-index: 2000; }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-content { background: var(--surface); width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 32px 24px; transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -161,7 +184,6 @@
         /* Tab Evolución */
         .profile-section { background: var(--surface); border-radius: var(--radius-lg); padding: 24px; margin: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); }
         .profile-section h3 { font-size: 20px; font-weight: 800; margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 10px;}
-        
         .metric-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #F0F0F0; }
         .metric-label { font-size: 16px; font-weight: 700; color: var(--text-muted); }
         .metric-input { text-align: right; font-size: 18px; font-weight: 800; border: none; background: #F9F9F9; padding: 8px 12px; border-radius: 8px; width: 90px; outline: none;}
@@ -176,26 +198,47 @@
 
         .btn-logout { width: 100%; padding: 14px; background: #FFEBEE; color: #D32F2F; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 24px; }
 
-        /* Navegación Inferior (Ajustada para PC) */
+        /* Navegación Inferior */
         .bottom-nav {
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: var(--surface);
+            position: absolute; bottom: 0; left: 0; width: 100%; background: var(--surface);
             border-top: 1px solid var(--border); display: flex; justify-content: space-around;
             padding: 12px 0; z-index: 900; border-radius: 0 0 12px 12px;
         }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer; }
         .nav-item.active { color: var(--text-main); }
 
-        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 700; box-shadow: var(--shadow); transition: 0.3s; z-index: 2000; font-size: 16px; white-space: nowrap; }
-        .toast.show { transform: translateX(-50%) translateY(0); }
+        /* Timer y Toast Ajustados */
+        .rest-timer {
+            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(150%);
+            background: #000; color: #FFF; padding: 12px 24px; border-radius: 99px;
+            font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000;
+        }
+        .rest-timer.active { transform: translateX(-50%) translateY(0); }
+        .timer-close { background: #333; border: none; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer;}
+
+        .toast { 
+            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); 
+            background: #333; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 700; 
+            box-shadow: var(--shadow); transition: 0.3s; z-index: 2000; font-size: 16px; white-space: nowrap; 
+            opacity: 0; pointer-events: none; /* Arreglo del cartel negro */
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
     </style>
 </head>
 <body>
 
-    <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleImageCapture(event)">
+    <div id="loader">
+        <div class="spinner"></div>
+        <p style="margin-top: 16px; font-weight: 700; color: #555;">Conectando a la nube...</p>
+    </div>
+
+    <!-- Sacamos el capture="environment" para que en la PC abra el buscador de archivos normal -->
+    <input type="file" id="cameraInput" accept="image/*" style="display:none;" onchange="handleImageCapture(event)">
     <input type="file" id="excelInput" accept=".xlsx" style="display:none;" onchange="importExcel(event)">
 
     <!-- Pantalla Login -->
-    <div id="userSelector">
+    <div id="userSelector" style="display: none;">
         <h2>¿Quién entrena hoy? 💪</h2>
         <div class="user-btn" onclick="selectUser('Mariana')">Mariana</div>
         <div class="user-btn" onclick="selectUser('Silvana')">Silvana</div>
@@ -266,7 +309,7 @@
                 </div>
                 
                 <div class="excel-toolbar" id="excelToolbar">
-                    <button class="btn-excel down" onclick="downloadExcelTemplate()">📥 Bajar Modelo Excel</button>
+                    <button class="btn-excel down" onclick="downloadExcelTemplate()">📥 Bajar Excel</button>
                     <button class="btn-excel up" onclick="document.getElementById('excelInput').click()">⬆️ Subir Excel</button>
                 </div>
                 
@@ -277,7 +320,7 @@
                 
                 <div id="exerciseList"></div>
                 
-                <button class="btn-add-ex" id="btnAddEx" onclick="openAddModal()">+ Agregar Ejercicio Nuevo</button>
+                <button class="btn-add-ex" id="btnAddEx" onclick="openAddModal()">+ Agregar Ejercicio</button>
                 <button class="btn-finish" id="finishBtn" onclick="finishWorkout()">Finalizar Entrenamiento 🏆</button>
             </div>
         </div>
@@ -303,7 +346,6 @@
             </div>
         </div>
 
-        <!-- NAVEGACIÓN INFERIOR -->
         <div class="bottom-nav">
             <div class="nav-item active" id="navRutina" onclick="switchMainTab('Rutina')">
                 <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
@@ -314,40 +356,16 @@
                 Evolución
             </div>
         </div>
+    </div>
 
+    <div class="rest-timer" id="restTimer">
+        ⏳ <span id="timerText">01:00</span>
+        <button class="timer-close" onclick="closeTimer()">✕</button>
     </div>
 
     <div class="toast" id="toast">Mensaje</div>
 
     <script>
-        const localImagesMap = {
-            "Prensa": "prensa.png",
-            "Extensiones en maquina": "extenciones maquina.png",
-            "Extensiones máquina": "extenciones maquina.png",
-            "Extensiones": "extenciones maquina.png",
-            "Gemelos sentado": "gemelos sentado.png",
-            "Gemelos": "gemelos sentado.png",
-            "Tirones en polea con barra": "tirones polea.png",
-            "Tirones polea (Barra)": "tirones polea.png",
-            "Tirones polea": "tirones polea.png",
-            "Tirones tras nuca": "tirones nuca.png",
-            "Tirones nuca": "tirones nuca.png",
-            "Elev. lateral": "elevacion lateral en maquina.png",
-            "Elevación lateral (Máq.)": "elevacion lateral en maquina.png",
-            "Vuelos": "posterior en polea.png",
-            "Press mancu.": "press mancuerna.png",
-            "Press sentado": "press mancuerna.png",
-            "Hip Thrust": "hip thrust.png",
-            "Patada Glúteo": "patada de gluteo en polea.png",
-            "Jalón pecho": "jalon al pecho.png",
-            "Pull-over": "pull over.png",
-            "Pull over": "pull over.png",
-            "Remo disco": "remo bajo polea.png",
-            "Sent. Sumo": "sentadilla sumo.png",
-            "Abducción": "abduccion.png",
-            "Femorales": "femorales.png"
-        };
-
         const muscleImages = {
             "Piernas": "https://images.unsplash.com/photo-1434682881908-b43d0467b798?w=200&q=80",
             "Tríceps": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200&q=80",
@@ -362,14 +380,14 @@
             1: { color: 'var(--day1)', title: 'Día 1', ejercicios: [
                 { muscle: "Piernas", name: "Prensa", reps: "4x10", indicaciones: "Bajar lento" },
                 { muscle: "Piernas", name: "Extensiones", reps: "4x10", indicaciones: "" },
-                { muscle: "Tríceps", name: "Tirones polea", reps: "4x10", indicaciones: "Codos pegados a las costillas" }
+                { muscle: "Tríceps", name: "Tirones polea", reps: "4x10", indicaciones: "Codos pegados" }
             ]},
             2: { color: 'var(--day2)', title: 'Día 2', ejercicios: [
                 { muscle: "Hombros", name: "Elev. lateral", reps: "4x10", indicaciones: "" },
                 { muscle: "Piernas", name: "Hip Thrust", reps: "4x10", indicaciones: "Apretar glúteos arriba" }
             ]},
             3: { color: 'var(--day3)', title: 'Día 3', ejercicios: [
-                { muscle: "Dorsales", name: "Jalón pecho", reps: "4x10", indicaciones: "Sacar pecho al bajar" },
+                { muscle: "Dorsales", name: "Jalón pecho", reps: "4x10", indicaciones: "Sacar pecho" },
                 { muscle: "Piernas", name: "Sent. Sumo", reps: "4x10", indicaciones: "" }
             ]},
             4: { color: 'var(--day4)', title: 'Día 4', ejercicios: [
@@ -378,20 +396,46 @@
             ]}
         };
 
+        let masterRutinas = {};
+        let masterImages = {};
+        
         let currentDay = 1;
         let currentUserName = "";
-        let userRutinas = {};
         let progressData = {};
         let weightData = {};
         let historyData = [];
         let exerciseAwaitingPhoto = null;
         let isEditMode = false;
+        let timerInterval;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            setTodaysDate();
-            const savedUser = localStorage.getItem('fitapp_active_user');
-            if(savedUser) initializeAfterLogin(savedUser);
-        });
+        window.initAppFromFirebase = async function() {
+            try {
+                // 1. Cargar Rutina e Imágenes de la Nube (Master)
+                const masterSnap = await window.fbGetDoc(window.fbDoc(window.fbDb, "fitapp", "master"));
+                if (masterSnap.exists()) {
+                    const data = masterSnap.data();
+                    masterRutinas = data.rutinas || defaultRutinas;
+                    masterImages = data.images || {};
+                } else {
+                    masterRutinas = defaultRutinas;
+                    await window.fbSetDoc(window.fbDoc(window.fbDb, "fitapp", "master"), { rutinas: masterRutinas, images: {} });
+                }
+
+                document.getElementById('loader').style.display = 'none';
+
+                // 2. Verificar usuario activo
+                const savedUser = localStorage.getItem('fitapp_active_user');
+                if(savedUser) {
+                    await initializeAfterLogin(savedUser);
+                } else {
+                    document.getElementById('userSelector').style.display = 'flex';
+                }
+
+            } catch (e) {
+                console.error("Error conectando a Firebase:", e);
+                showToast("Error de conexión a la nube");
+            }
+        };
 
         function setTodaysDate() {
             const today = new Date();
@@ -399,9 +443,9 @@
             document.getElementById('dateMonth').textContent = today.toLocaleString('es-ES', { month: 'short' });
         }
 
-        function selectUser(user) {
+        async function selectUser(user) {
             localStorage.setItem('fitapp_active_user', user);
-            initializeAfterLogin(user);
+            await initializeAfterLogin(user);
         }
 
         function logout() {
@@ -410,27 +454,55 @@
             document.getElementById('userSelector').style.display = 'flex';
         }
 
-        function initializeAfterLogin(user) {
+        async function initializeAfterLogin(user) {
             currentUserName = user;
             document.getElementById('userSelector').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('userNameHeader').textContent = user;
+            setTodaysDate();
             
-            const savedRutinas = localStorage.getItem(`fitapp_rutinas_${user}`);
-            userRutinas = savedRutinas ? JSON.parse(savedRutinas) : JSON.parse(JSON.stringify(defaultRutinas));
-            
-            progressData = JSON.parse(localStorage.getItem(`fitapp_progreso_${user}`)) || {};
-            weightData = JSON.parse(localStorage.getItem(`fitapp_pesos_${user}`)) || {};
-            historyData = JSON.parse(localStorage.getItem(`fitapp_historial_${user}`)) || [];
-            
-            const metrics = JSON.parse(localStorage.getItem(`fitapp_metricas_${user}`)) || {};
-            if(metrics.peso) document.getElementById('metPeso').value = metrics.peso;
-            if(metrics.cintura) document.getElementById('metCintura').value = metrics.cintura;
-            if(metrics.cadera) document.getElementById('metCadera').value = metrics.cadera;
+            // Cargar datos propios del usuario desde Firebase
+            const userSnap = await window.fbGetDoc(window.fbDoc(window.fbDb, "fitapp", `user_${user}`));
+            if(userSnap.exists()) {
+                const data = userSnap.data();
+                progressData = data.progress || {};
+                weightData = data.weights || {};
+                historyData = data.history || [];
+                const metrics = data.metrics || {};
+                document.getElementById('metPeso').value = metrics.peso || '';
+                document.getElementById('metCintura').value = metrics.cintura || '';
+                document.getElementById('metCadera').value = metrics.cadera || '';
+            } else {
+                progressData = {}; weightData = {}; historyData = [];
+                document.getElementById('metPeso').value = '';
+                document.getElementById('metCintura').value = '';
+                document.getElementById('metCadera').value = '';
+            }
 
             updateHistoryView();
             goHome(); 
             switchMainTab('Rutina');
+        }
+
+        // GUARDADO EN LA NUBE
+        async function saveUserCloudData() {
+            await window.fbSetDoc(window.fbDoc(window.fbDb, "fitapp", `user_${currentUserName}`), {
+                progress: progressData,
+                weights: weightData,
+                history: historyData,
+                metrics: {
+                    peso: document.getElementById('metPeso').value,
+                    cintura: document.getElementById('metCintura').value,
+                    cadera: document.getElementById('metCadera').value
+                }
+            }, { merge: true });
+        }
+
+        async function saveMasterCloudData() {
+            await window.fbSetDoc(window.fbDoc(window.fbDb, "fitapp", "master"), {
+                rutinas: masterRutinas
+            }, { merge: true });
+            showToast("Rutina actualizada en la nube para todas 🚀");
         }
 
         function switchMainTab(tab) {
@@ -442,7 +514,7 @@
 
         function openDay(dayNumber) {
             currentDay = dayNumber;
-            const data = userRutinas[dayNumber];
+            const data = masterRutinas[dayNumber];
             
             document.getElementById('homeView').style.display = 'none';
             document.getElementById('workoutView').classList.add('active');
@@ -451,8 +523,9 @@
             document.getElementById('progressBar').style.backgroundColor = data.color;
             document.getElementById('finishBtn').style.backgroundColor = "#000"; 
 
-            if (!progressData[`day_${dayNumber}`]) {
+            if (!progressData[`day_${dayNumber}`] || progressData[`day_${dayNumber}`].length !== data.ejercicios.length) {
                 progressData[`day_${dayNumber}`] = Array(data.ejercicios.length).fill(false);
+                saveUserCloudData();
             }
 
             isEditMode = false;
@@ -504,7 +577,7 @@
         }
 
         function openEditModal(index) {
-            const ex = userRutinas[currentDay].ejercicios[index];
+            const ex = masterRutinas[currentDay].ejercicios[index];
             document.getElementById('modalTitle').textContent = "Editar Ejercicio";
             document.getElementById('editExIndex').value = index;
             document.getElementById('editExMuscle').value = ex.muscle;
@@ -518,7 +591,7 @@
             document.getElementById('editExModal').classList.remove('active');
         }
 
-        function saveExercise() {
+        async function saveExercise() {
             const index = parseInt(document.getElementById('editExIndex').value);
             const muscle = document.getElementById('editExMuscle').value.trim() || "General";
             const name = document.getElementById('editExName').value.trim();
@@ -528,50 +601,39 @@
             if(!name) return alert("Ponle un nombre al ejercicio");
 
             if(index === -1) {
-                userRutinas[currentDay].ejercicios.push({ muscle, name, reps, indicaciones });
+                masterRutinas[currentDay].ejercicios.push({ muscle, name, reps, indicaciones });
                 progressData[`day_${currentDay}`].push(false);
             } else {
-                userRutinas[currentDay].ejercicios[index] = { muscle, name, reps, indicaciones };
+                masterRutinas[currentDay].ejercicios[index] = { muscle, name, reps, indicaciones };
             }
 
-            localStorage.setItem(`fitapp_rutinas_${currentUserName}`, JSON.stringify(userRutinas));
-            localStorage.setItem(`fitapp_progreso_${currentUserName}`, JSON.stringify(progressData));
-            
+            await saveMasterCloudData();
+            await saveUserCloudData();
             closeEditModal();
             renderExercises();
         }
 
-        function deleteExercise(index) {
+        async function deleteExercise(index) {
             if(confirm("¿Seguro que querés borrar este ejercicio?")) {
-                userRutinas[currentDay].ejercicios.splice(index, 1);
+                masterRutinas[currentDay].ejercicios.splice(index, 1);
                 progressData[`day_${currentDay}`].splice(index, 1);
                 
-                localStorage.setItem(`fitapp_rutinas_${currentUserName}`, JSON.stringify(userRutinas));
-                localStorage.setItem(`fitapp_progreso_${currentUserName}`, JSON.stringify(progressData));
+                await saveMasterCloudData();
+                await saveUserCloudData();
                 renderExercises();
             }
         }
 
-        // --- SISTEMA EXCEL (GUARDADO MASIVO PARA LAS 3) ---
         function downloadExcelTemplate() {
             let templateData = [];
             for(let d=1; d<=4; d++) {
-                if(userRutinas[d] && userRutinas[d].ejercicios) {
-                    userRutinas[d].ejercicios.forEach(ex => {
-                        templateData.push({
-                            Dia: d,
-                            Musculo: ex.muscle,
-                            Ejercicio: ex.name,
-                            Repeticiones: ex.reps,
-                            Indicaciones: ex.indicaciones || ""
-                        });
+                if(masterRutinas[d] && masterRutinas[d].ejercicios) {
+                    masterRutinas[d].ejercicios.forEach(ex => {
+                        templateData.push({ Dia: d, Musculo: ex.muscle, Ejercicio: ex.name, Repeticiones: ex.reps, Indicaciones: ex.indicaciones || "" });
                     });
                 }
             }
-            if(templateData.length === 0) {
-                templateData = [{ Dia: 1, Musculo: "Piernas", Ejercicio: "Prensa", Repeticiones: "4x10", Indicaciones: "Bajar lento" }];
-            }
-
+            if(templateData.length === 0) templateData = [{ Dia: 1, Musculo: "Piernas", Ejercicio: "Prensa", Repeticiones: "4x10", Indicaciones: "Bajar lento" }];
             const ws = XLSX.utils.json_to_sheet(templateData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Rutina");
@@ -582,7 +644,7 @@
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, {type: 'array'});
                 const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
@@ -607,19 +669,11 @@
                     }
                 });
 
-                // ESTA ES LA MAGIA: Guardar la misma rutina a las 3 de un plumazo
-                const usuarias = ['Mariana', 'Silvana', 'Mariela'];
-                usuarias.forEach(u => {
-                    localStorage.setItem(`fitapp_rutinas_${u}`, JSON.stringify(newRutinas));
-                    // Opcional: Reiniciar el progreso al cambiar de rutina
-                    localStorage.setItem(`fitapp_progreso_${u}`, JSON.stringify({}));
-                });
+                masterRutinas = newRutinas;
+                await saveMasterCloudData();
+                progressData = {}; // Resetear progreso al cambiar toda la rutina
+                await saveUserCloudData();
 
-                // Actualizar la vista actual
-                userRutinas = newRutinas;
-                progressData = {};
-                
-                showToast(`¡Rutina aplicada para las 3! 🚀`);
                 if(document.getElementById('workoutView').classList.contains('active')) {
                     openDay(currentDay);
                 }
@@ -638,12 +692,13 @@
             const file = event.target.files[0];
             if(!file || !exerciseAwaitingPhoto) return;
             
+            showToast("Subiendo imagen a la nube...");
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = (e) => {
                 const img = new Image();
                 img.src = e.target.result;
-                img.onload = () => {
+                img.onload = async () => {
                     const canvas = document.createElement('canvas');
                     const size = 300; 
                     canvas.width = size; canvas.height = size;
@@ -654,7 +709,10 @@
                     ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
                     
                     const base64 = canvas.toDataURL('image/jpeg', 0.6);
-                    localStorage.setItem(`fitapp_foto_${exerciseAwaitingPhoto}`, base64);
+                    masterImages[exerciseAwaitingPhoto] = base64;
+                    
+                    await window.fbSetDoc(window.fbDoc(window.fbDb, "fitapp", "master"), { images: masterImages }, { merge: true });
+                    showToast("¡Imagen guardada para todas!");
                     renderExercises();
                 };
             };
@@ -662,7 +720,7 @@
         }
 
         function renderExercises() {
-            const data = userRutinas[currentDay];
+            const data = masterRutinas[currentDay];
             const list = document.getElementById('exerciseList');
             const checks = progressData[`day_${currentDay}`];
 
@@ -670,15 +728,9 @@
                 const isDone = checks[index];
                 const savedKg = weightData[ex.name] || '';
                 
-                // Mapeo Inteligente (Busca variaciones en los nombres de las fotos)
-                const customPhoto = localStorage.getItem(`fitapp_foto_${ex.name}`);
-                
-                // Limpiamos un poco el nombre para encontrar la foto local más fácil
-                let nombreLimpio = ex.name.trim();
-                const localPhoto = localImagesMap[nombreLimpio] ? `./${localImagesMap[nombreLimpio]}` : null;
+                const cloudPhoto = masterImages[ex.name];
                 const fallback = muscleImages[ex.muscle] || muscleImages["Piernas"];
-                
-                const imgUrl = customPhoto ? customPhoto : (localPhoto ? localPhoto : fallback);
+                const imgUrl = cloudPhoto ? cloudPhoto : fallback;
                 
                 const checkIcon = isDone ? `<svg width="28" height="28" fill="none" stroke="#000" viewBox="0 0 24 24" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>` : '';
                 
@@ -729,25 +781,51 @@
             }).join('');
         }
 
-        function saveWeight(exName, value) {
+        async function saveWeight(exName, value) {
             weightData[exName] = value;
-            localStorage.setItem(`fitapp_pesos_${currentUserName}`, JSON.stringify(weightData));
+            await saveUserCloudData();
         }
 
-        function saveMetrics() {
-            const metrics = { peso: document.getElementById('metPeso').value, cintura: document.getElementById('metCintura').value, cadera: document.getElementById('metCadera').value };
-            localStorage.setItem(`fitapp_metricas_${currentUserName}`, JSON.stringify(metrics));
-            showToast('Medidas guardadas');
+        async function saveMetrics() {
+            await saveUserCloudData();
+            showToast('Medidas guardadas en la nube');
         }
 
-        function toggleExercise(index) {
+        async function toggleExercise(index) {
             if(isEditMode) return;
             const isNowDone = !progressData[`day_${currentDay}`][index];
             progressData[`day_${currentDay}`][index] = isNowDone;
-            localStorage.setItem(`fitapp_progreso_${currentUserName}`, JSON.stringify(progressData));
             
             renderExercises();
             updateProgress();
+            await saveUserCloudData();
+
+            if(isNowDone) startRestTimer();
+        }
+
+        function startRestTimer() {
+            clearInterval(timerInterval);
+            let timeLeft = 60;
+            const timerEl = document.getElementById('restTimer');
+            const textEl = document.getElementById('timerText');
+            timerEl.classList.add('active');
+            textEl.textContent = `01:00`;
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                if(timeLeft <= 0) {
+                    closeTimer();
+                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                } else {
+                    const secs = timeLeft.toString().padStart(2, '0');
+                    textEl.textContent = `00:${secs}`;
+                }
+            }, 1000);
+        }
+
+        function closeTimer() {
+            clearInterval(timerInterval);
+            document.getElementById('restTimer').classList.remove('active');
         }
 
         function updateProgress() {
@@ -760,17 +838,16 @@
             document.getElementById('finishBtn').style.display = (percent === 100 && !isEditMode) ? 'block' : 'none';
         }
 
-        function finishWorkout() {
+        async function finishWorkout() {
             const todayStr = new Date().toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
-            historyData.unshift({ date: todayStr, dayTitle: userRutinas[currentDay].title });
-            localStorage.setItem(`fitapp_historial_${currentUserName}`, JSON.stringify(historyData));
+            historyData.unshift({ date: todayStr, dayTitle: masterRutinas[currentDay].title });
             
+            progressData[`day_${currentDay}`] = Array(masterRutinas[currentDay].ejercicios.length).fill(false);
+            
+            await saveUserCloudData();
             updateHistoryView();
 
             alert(`¡Entrenamiento completado ${currentUserName}! 💪`);
-            
-            progressData[`day_${currentDay}`] = Array(userRutinas[currentDay].ejercicios.length).fill(false);
-            localStorage.setItem(`fitapp_progreso_${currentUserName}`, JSON.stringify(progressData));
             
             goHome();
             switchMainTab('Evolucion');
