@@ -8,6 +8,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>FitApp | Ital Fitnes</title>
     
+    <!-- SheetJS para Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
         :root {
             --bg-light: #FDFDFF;
@@ -77,14 +80,20 @@
         .day-card.d3::after { background-color: var(--day3); } 
         .day-card.d4::after { background-color: var(--day4); } 
 
-        /* Ejercicios */
+        /* Ejercicios y Rutina */
         .routine-container { display: none; padding: 0 16px; }
         .routine-container.active { display: block; }
         
-        .routine-toolbar { display: flex; justify-content: space-between; align-items: center; margin: 16px 0;}
+        .routine-toolbar { display: flex; justify-content: space-between; align-items: center; margin: 16px 0; flex-wrap: wrap; gap: 10px;}
         .back-btn { background: #EEE; border: none; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 99px; }
         .edit-btn { background: transparent; border: 2px solid #000; color: #000; font-size: 14px; font-weight: 700; cursor: pointer; padding: 8px 16px; border-radius: 99px; transition: 0.2s;}
         .edit-btn.active { background: #000; color: #FFF; }
+
+        .excel-toolbar { display: none; width: 100%; gap: 10px; margin-top: 8px; }
+        .excel-toolbar.active { display: flex; }
+        .btn-excel { flex: 1; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; }
+        .btn-excel.down { background: #E3F2FD; color: #1976D2; }
+        .btn-excel.up { background: #E8F5E9; color: #388E3C; }
 
         .day-title { font-size: 32px; font-weight: 900; }
         .progress-bar-bg { width: 100%; height: 14px; background: #EEE; border-radius: 7px; overflow: hidden; margin-top: 12px; margin-bottom: 24px;}
@@ -102,7 +111,10 @@
         
         .ex-info { flex: 1; min-width: 0; }
         .ex-muscle { font-size: 12px; text-transform: uppercase; font-weight: 800; color: var(--text-muted); margin-bottom: 2px; }
-        .ex-name { font-size: 18px; font-weight: 800; margin-bottom: 8px; line-height: 1.1; }
+        .ex-name { font-size: 18px; font-weight: 800; margin-bottom: 6px; line-height: 1.1; }
+        
+        /* Nuevo Campo de Indicaciones */
+        .ex-hint { font-size: 13px; font-weight: 600; color: #1565C0; background: #E3F2FD; padding: 6px 10px; border-radius: 6px; margin-bottom: 8px; display: inline-block;}
         
         .ex-metrics { display: flex; align-items: center; gap: 12px; }
         .ex-reps { font-size: 15px; font-weight: 800; color: #FFF; background: #333; padding: 6px 12px; border-radius: 8px; }
@@ -114,7 +126,6 @@
         .checkbox { width: 44px; height: 44px; border-radius: 12px; border: 3px solid #CCC; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; margin-left: 12px; background: white; }
         .exercise-item.done .checkbox { border-color: transparent; }
 
-        /* Controles de Edición */
         .edit-controls { display: none; align-items: center; gap: 8px; margin-left: 12px;}
         .edit-controls button { width: 36px; height: 36px; border-radius: 8px; border: none; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer;}
         .btn-del { background: #FFEBEE; color: #D32F2F; }
@@ -135,16 +146,6 @@
         .form-control { width: 100%; padding: 12px; border: 1px solid #CCC; border-radius: 8px; font-size: 16px; outline: none; }
         .btn-modal-save { width: 100%; padding: 16px; border-radius: 12px; background: #000; color: #FFF; font-size: 16px; font-weight: 800; border: none; margin-top: 10px; cursor: pointer;}
 
-        /* Timer Flotante */
-        .rest-timer {
-            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(150%);
-            background: #000; color: #FFF; padding: 12px 24px; border-radius: 99px;
-            font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000;
-        }
-        .rest-timer.active { transform: translateX(-50%) translateY(0); }
-        .timer-close { background: #333; border: none; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer;}
-
         /* Tab Evolución */
         .profile-section { background: var(--surface); border-radius: var(--radius-lg); padding: 24px; margin: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); }
         .profile-section h3 { font-size: 20px; font-weight: 800; margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 10px;}
@@ -161,6 +162,8 @@
         .history-item { padding: 12px 0; font-size: 15px; font-weight: 700; color: var(--text-main); border-bottom: 1px solid #F0F0F0; display: flex; justify-content: space-between;}
         .history-item span { color: var(--text-muted); font-size: 13px;}
 
+        .btn-logout { width: 100%; padding: 14px; background: #FFEBEE; color: #D32F2F; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 24px; }
+
         /* Navegación Inferior */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%; background: var(--surface);
@@ -169,11 +172,15 @@
         }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer; }
         .nav-item.active { color: var(--text-main); }
+
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 700; box-shadow: var(--shadow); transition: 0.3s; z-index: 2000; font-size: 16px; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
     </style>
 </head>
 <body>
 
     <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleImageCapture(event)">
+    <input type="file" id="excelInput" accept=".xlsx" style="display:none;" onchange="importExcel(event)">
 
     <!-- Pantalla Login -->
     <div id="userSelector">
@@ -193,12 +200,16 @@
                 <input type="text" id="editExMuscle" class="form-control" placeholder="Ej: Piernas, Pecho...">
             </div>
             <div class="form-group">
-                <label>Nombre de la Máquina / Ejercicio</label>
-                <input type="text" id="editExName" class="form-control" placeholder="Ej: Prensa a 45 grados">
+                <label>Nombre del Ejercicio</label>
+                <input type="text" id="editExName" class="form-control" placeholder="Ej: Prensa">
             </div>
             <div class="form-group">
                 <label>Series y Repeticiones</label>
                 <input type="text" id="editExReps" class="form-control" placeholder="Ej: 4x10">
+            </div>
+            <div class="form-group">
+                <label>Indicaciones (Opcional - Tip Técnico)</label>
+                <input type="text" id="editExHint" class="form-control" placeholder="Ej: Espalda derecha, bajar lento">
             </div>
             <button class="btn-modal-save" onclick="saveExercise()">Guardar Ejercicio</button>
             <button class="btn-modal-save" style="background: transparent; color: #555; border: 1px solid #CCC;" onclick="closeEditModal()">Cancelar</button>
@@ -242,6 +253,12 @@
                     <button class="edit-btn" id="btnToggleEdit" onclick="toggleEditMode()">✏️ Editar</button>
                 </div>
                 
+                <!-- Barra de Excel (Se muestra solo al Editar) -->
+                <div class="excel-toolbar" id="excelToolbar">
+                    <button class="btn-excel down" onclick="downloadExcelTemplate()">📥 Bajar Modelo Excel</button>
+                    <button class="btn-excel up" onclick="document.getElementById('excelInput').click()">⬆️ Subir Excel</button>
+                </div>
+                
                 <div class="day-header">
                     <h2 class="day-title" id="currentDayTitle">Día X</h2>
                     <div class="progress-bar-bg" id="progressContainer"><div class="progress-bar-fill" id="progressBar"></div></div>
@@ -271,10 +288,10 @@
             <div class="profile-section">
                 <h3>Últimos Entrenamientos</h3>
                 <ul class="history-list" id="historyList"></ul>
+                <button class="btn-logout" onclick="logout()">Cerrar Sesión / Cambiar Usuario</button>
             </div>
         </div>
 
-        <!-- NAVEGACIÓN INFERIOR -->
         <div class="bottom-nav">
             <div class="nav-item active" id="navRutina" onclick="switchMainTab('Rutina')">
                 <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
@@ -286,15 +303,11 @@
             </div>
         </div>
 
-        <div class="rest-timer" id="restTimer">
-            ⏳ <span id="timerText">01:00</span>
-            <button class="timer-close" onclick="closeTimer()">✕</button>
-        </div>
-
     </div>
 
+    <div class="toast" id="toast">Mensaje</div>
+
     <script>
-        // Mapeo automático a las fotos de tu carpeta local
         const localImagesMap = {
             "Prensa": "prensa.png",
             "Extensiones máquina": "extenciones maquina.png",
@@ -332,36 +345,21 @@
 
         const defaultRutinas = {
             1: { color: 'var(--day1)', title: 'Día 1', ejercicios: [
-                { muscle: "Piernas", name: "Prensa", reps: "4x10" },
-                { muscle: "Piernas", name: "Extensiones", reps: "4x10" },
-                { muscle: "Piernas", name: "Gemelos", reps: "4x10" },
-                { muscle: "Tríceps", name: "Tirones polea", reps: "4x10" },
-                { muscle: "Tríceps", name: "Tirones nuca", reps: "4x12" }
+                { muscle: "Piernas", name: "Prensa", reps: "4x10", indicaciones: "Bajar lento, no trabar rodillas arriba" },
+                { muscle: "Piernas", name: "Extensiones", reps: "4x10", indicaciones: "" },
+                { muscle: "Tríceps", name: "Tirones polea", reps: "4x10", indicaciones: "Codos pegados a las costillas" }
             ]},
             2: { color: 'var(--day2)', title: 'Día 2', ejercicios: [
-                { muscle: "Hombros", name: "Elev. lateral", reps: "4x10" },
-                { muscle: "Hombros", name: "Vuelos", reps: "4x10" },
-                { muscle: "Hombros", name: "Press mancu.", reps: "3x10" },
-                { muscle: "Piernas", name: "Hip Thrust", reps: "4x10" },
-                { muscle: "Piernas", name: "Patada Glúteo", reps: "4x10" }
+                { muscle: "Hombros", name: "Elev. lateral", reps: "4x10", indicaciones: "Subir hasta la altura de los hombros" },
+                { muscle: "Piernas", name: "Hip Thrust", reps: "4x10", indicaciones: "Apretar glúteos arriba 1 segundo" }
             ]},
             3: { color: 'var(--day3)', title: 'Día 3', ejercicios: [
-                { muscle: "Dorsales", name: "Jalón pecho", reps: "4x10" },
-                { muscle: "Dorsales", name: "Pull-over", reps: "4x10" },
-                { muscle: "Dorsales", name: "Remo disco", reps: "4x10/8" },
-                { muscle: "Piernas", name: "Sent. Sumo", reps: "4x10" },
-                { muscle: "Piernas", name: "Abducción", reps: "4x10" },
-                { muscle: "Piernas", name: "Femorales", reps: "4x8" }
+                { muscle: "Dorsales", name: "Jalón pecho", reps: "4x10", indicaciones: "Sacar pecho al bajar" },
+                { muscle: "Piernas", name: "Sent. Sumo", reps: "4x10", indicaciones: "Punta de los pies hacia afuera" }
             ]},
             4: { color: 'var(--day4)', title: 'Día 4', ejercicios: [
-                { muscle: "Pectorales", name: "Press inclinado", reps: "4x10" },
-                { muscle: "Pectorales", name: "Pull over", reps: "4x8" },
-                { muscle: "Pectorales", name: "Peck-deck", reps: "3x10" },
-                { muscle: "Bíceps", name: "Curl alterno", reps: "3x12" },
-                { muscle: "Bíceps", name: "Curl scott", reps: "4x10" },
-                { muscle: "Bíceps", name: "Curl polea", reps: "4x10" },
-                { muscle: "Tríceps", name: "Press francés", reps: "4x10" },
-                { muscle: "Tríceps", name: "Press franc. mancu.", reps: "4x10" }
+                { muscle: "Pectorales", name: "Press inclinado", reps: "4x10", indicaciones: "" },
+                { muscle: "Bíceps", name: "Curl alterno", reps: "3x12", indicaciones: "No balancear la espalda" }
             ]}
         };
 
@@ -372,7 +370,6 @@
         let weightData = {};
         let historyData = [];
         let exerciseAwaitingPhoto = null;
-        let timerInterval;
         let isEditMode = false;
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -390,6 +387,12 @@
         function selectUser(user) {
             localStorage.setItem('fitapp_active_user', user);
             initializeAfterLogin(user);
+        }
+
+        function logout() {
+            localStorage.removeItem('fitapp_active_user');
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('userSelector').style.display = 'flex';
         }
 
         function initializeAfterLogin(user) {
@@ -411,6 +414,8 @@
             if(metrics.cadera) document.getElementById('metCadera').value = metrics.cadera;
 
             updateHistoryView();
+            goHome(); // Resetea a la vista principal
+            switchMainTab('Rutina');
         }
 
         function switchMainTab(tab) {
@@ -437,7 +442,9 @@
 
             isEditMode = false;
             document.getElementById('btnToggleEdit').classList.remove('active');
+            document.getElementById('btnToggleEdit').textContent = "✏️ Editar";
             document.getElementById('btnAddEx').style.display = 'none';
+            document.getElementById('excelToolbar').classList.remove('active');
 
             renderExercises();
             updateProgress();
@@ -453,16 +460,19 @@
             const btn = document.getElementById('btnToggleEdit');
             const btnAdd = document.getElementById('btnAddEx');
             const progBar = document.getElementById('progressContainer');
+            const excelTool = document.getElementById('excelToolbar');
             
             if(isEditMode) {
                 btn.classList.add('active');
-                btn.textContent = "💾 Terminar Edición";
+                btn.textContent = "💾 Terminar";
                 btnAdd.style.display = 'block';
+                excelTool.classList.add('active');
                 progBar.style.display = 'none'; 
             } else {
                 btn.classList.remove('active');
                 btn.textContent = "✏️ Editar";
                 btnAdd.style.display = 'none';
+                excelTool.classList.remove('active');
                 progBar.style.display = 'block';
             }
             renderExercises();
@@ -474,6 +484,7 @@
             document.getElementById('editExMuscle').value = "";
             document.getElementById('editExName').value = "";
             document.getElementById('editExReps').value = "";
+            document.getElementById('editExHint').value = "";
             document.getElementById('editExModal').classList.add('active');
         }
 
@@ -484,6 +495,7 @@
             document.getElementById('editExMuscle').value = ex.muscle;
             document.getElementById('editExName').value = ex.name;
             document.getElementById('editExReps').value = ex.reps;
+            document.getElementById('editExHint').value = ex.indicaciones || "";
             document.getElementById('editExModal').classList.add('active');
         }
 
@@ -496,14 +508,15 @@
             const muscle = document.getElementById('editExMuscle').value.trim() || "General";
             const name = document.getElementById('editExName').value.trim();
             const reps = document.getElementById('editExReps').value.trim() || "4x10";
+            const indicaciones = document.getElementById('editExHint').value.trim();
 
             if(!name) return alert("Ponle un nombre al ejercicio");
 
             if(index === -1) {
-                userRutinas[currentDay].ejercicios.push({ muscle, name, reps });
+                userRutinas[currentDay].ejercicios.push({ muscle, name, reps, indicaciones });
                 progressData[`day_${currentDay}`].push(false);
             } else {
-                userRutinas[currentDay].ejercicios[index] = { muscle, name, reps };
+                userRutinas[currentDay].ejercicios[index] = { muscle, name, reps, indicaciones };
             }
 
             localStorage.setItem(`fitapp_rutinas_${currentUserName}`, JSON.stringify(userRutinas));
@@ -524,43 +537,113 @@
             }
         }
 
+        // --- SISTEMA EXCEL (IMPORT/EXPORT MASIVO) ---
+        function downloadExcelTemplate() {
+            let templateData = [];
+            // Rellenar con la rutina actual de este usuario
+            for(let d=1; d<=4; d++) {
+                if(userRutinas[d] && userRutinas[d].ejercicios) {
+                    userRutinas[d].ejercicios.forEach(ex => {
+                        templateData.push({
+                            Dia: d,
+                            Musculo: ex.muscle,
+                            Ejercicio: ex.name,
+                            Repeticiones: ex.reps,
+                            Indicaciones: ex.indicaciones || ""
+                        });
+                    });
+                }
+            }
+            // Si estaba vacía, mandamos un renglón de ejemplo
+            if(templateData.length === 0) {
+                templateData = [{ Dia: 1, Musculo: "Piernas", Ejercicio: "Prensa", Repeticiones: "4x10", Indicaciones: "Bajar lento" }];
+            }
+
+            const ws = XLSX.utils.json_to_sheet(templateData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Rutina");
+            XLSX.writeFile(wb, `Rutina_${currentUserName}.xlsx`);
+        }
+
+        function importExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                if (json.length === 0) return;
+
+                // Resetear la rutina temporalmente
+                const newRutinas = {
+                    1: { color: 'var(--day1)', title: 'Día 1', ejercicios: [] },
+                    2: { color: 'var(--day2)', title: 'Día 2', ejercicios: [] },
+                    3: { color: 'var(--day3)', title: 'Día 3', ejercicios: [] },
+                    4: { color: 'var(--day4)', title: 'Día 4', ejercicios: [] }
+                };
+
+                json.forEach(row => {
+                    const d = parseInt(row.Dia) || 1;
+                    if(newRutinas[d]) {
+                        newRutinas[d].ejercicios.push({
+                            muscle: row.Musculo || "General",
+                            name: row.Ejercicio || "Sin Nombre",
+                            reps: row.Repeticiones || "4x10",
+                            indicaciones: row.Indicaciones || ""
+                        });
+                    }
+                });
+
+                // Guardar la nueva rutina para este usuario
+                userRutinas = newRutinas;
+                localStorage.setItem(`fitapp_rutinas_${currentUserName}`, JSON.stringify(userRutinas));
+
+                // Reiniciar el progreso
+                progressData = {};
+                localStorage.setItem(`fitapp_progreso_${currentUserName}`, JSON.stringify(progressData));
+
+                showToast(`Rutina importada para ${currentUserName} 🚀`);
+                if(document.getElementById('workoutView').classList.contains('active')) {
+                    openDay(currentDay); // Recargar la vista actual
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = '';
+        }
+        // --- FIN SISTEMA EXCEL ---
+
         function triggerCamera(exerciseName) {
             if(isEditMode) return; 
             exerciseAwaitingPhoto = exerciseName;
             document.getElementById('cameraInput').click();
         }
 
-        async function handleImageCapture(event) {
+        function handleImageCapture(event) {
             const file = event.target.files[0];
             if(!file || !exerciseAwaitingPhoto) return;
             
-            compressPhoto(file).then(base64 => {
-                localStorage.setItem(`fitapp_foto_${exerciseAwaitingPhoto}`, base64);
-                renderExercises();
-            });
-            event.target.value = ''; 
-        }
-
-        function compressPhoto(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (event) => {
-                    const img = new Image();
-                    img.src = event.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const size = 300; 
-                        canvas.width = size; canvas.height = size;
-                        const ctx = canvas.getContext('2d');
-                        const scale = Math.max(size / img.width, size / img.height);
-                        const x = (size - img.width * scale) / 2;
-                        const y = (size - img.height * scale) / 2;
-                        ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-                        resolve(canvas.toDataURL('image/jpeg', 0.6)); 
-                    };
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const size = 300; 
+                    canvas.width = size; canvas.height = size;
+                    const ctx = canvas.getContext('2d');
+                    const scale = Math.max(size / img.width, size / img.height);
+                    const x = (size - img.width * scale) / 2;
+                    const y = (size - img.height * scale) / 2;
+                    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+                    
+                    const base64 = canvas.toDataURL('image/jpeg', 0.6);
+                    localStorage.setItem(`fitapp_foto_${exerciseAwaitingPhoto}`, base64);
+                    renderExercises();
                 };
-            });
+            };
+            event.target.value = ''; 
         }
 
         function renderExercises() {
@@ -572,15 +655,18 @@
                 const isDone = checks[index];
                 const savedKg = weightData[ex.name] || '';
                 
-                // Lógica puente para las fotos
                 const customPhoto = localStorage.getItem(`fitapp_foto_${ex.name}`);
                 const localPhoto = localImagesMap[ex.name] ? `./${localImagesMap[ex.name]}` : null;
                 const fallback = muscleImages[ex.muscle] || muscleImages["Piernas"];
-                
                 const imgUrl = customPhoto ? customPhoto : (localPhoto ? localPhoto : fallback);
                 
                 const checkIcon = isDone ? `<svg width="28" height="28" fill="none" stroke="#000" viewBox="0 0 24 24" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>` : '';
                 
+                let hintHTML = '';
+                if (ex.indicaciones && ex.indicaciones.trim() !== '') {
+                    hintHTML = `<div class="ex-hint">💡 ${ex.indicaciones}</div>`;
+                }
+
                 let controlHTML = '';
                 if(isEditMode) {
                     controlHTML = `
@@ -606,6 +692,7 @@
                         <div class="ex-info">
                             <div class="ex-muscle">${ex.muscle}</div>
                             <div class="ex-name">${ex.name}</div>
+                            ${hintHTML}
                             <div class="ex-metrics">
                                 <span class="ex-reps">${ex.reps}</span>
                                 ${!isEditMode ? `
@@ -630,6 +717,7 @@
         function saveMetrics() {
             const metrics = { peso: document.getElementById('metPeso').value, cintura: document.getElementById('metCintura').value, cadera: document.getElementById('metCadera').value };
             localStorage.setItem(`fitapp_metricas_${currentUserName}`, JSON.stringify(metrics));
+            showToast('Medidas guardadas');
         }
 
         function toggleExercise(index) {
@@ -640,33 +728,6 @@
             
             renderExercises();
             updateProgress();
-
-            if(isNowDone) startRestTimer();
-        }
-
-        function startRestTimer() {
-            clearInterval(timerInterval);
-            let timeLeft = 60;
-            const timerEl = document.getElementById('restTimer');
-            const textEl = document.getElementById('timerText');
-            timerEl.classList.add('active');
-            textEl.textContent = `01:00`;
-
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                if(timeLeft <= 0) {
-                    closeTimer();
-                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-                } else {
-                    const secs = timeLeft.toString().padStart(2, '0');
-                    textEl.textContent = `00:${secs}`;
-                }
-            }, 1000);
-        }
-
-        function closeTimer() {
-            clearInterval(timerInterval);
-            document.getElementById('restTimer').classList.remove('active');
         }
 
         function updateProgress() {
@@ -686,7 +747,7 @@
             
             updateHistoryView();
 
-            alert(`¡Entrenamiento guardado ${currentUserName}! 💪`);
+            alert(`¡Entrenamiento completado ${currentUserName}! 💪`);
             
             progressData[`day_${currentDay}`] = Array(userRutinas[currentDay].ejercicios.length).fill(false);
             localStorage.setItem(`fitapp_progreso_${currentUserName}`, JSON.stringify(progressData));
@@ -707,6 +768,11 @@
             list.innerHTML = historyData.slice(0, 10).map(item => `
                 <li class="history-item">${item.date} <span>Completó ${item.dayTitle}</span></li>
             `).join('');
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast'); t.textContent = msg;
+            t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
         }
     </script>
 </body>
