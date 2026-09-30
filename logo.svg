@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Fondo marfil/blanco para que coincida con el tema de la app -->
+  <rect width="512" height="512" rx="115" fill="#FDFDFF"/>
+  <!-- Borde sutil -->
+  <rect width="500" height="500" x="6" y="6" rx="110" fill="none" stroke="#EEEEEE" stroke-width="8"/>
+
+  <!-- Asa de la pesa (alta legibilidad) -->
+  <path d="M 180 250 C 180 130, 332 130, 332 250" fill="none" stroke="#111827" stroke-width="44" stroke-linecap="round"/>
+
+  <!-- Cuerpo de la pesa negra -->
+  <circle cx="256" cy="320" r="110" fill="#111827"/>
+  
+  <!-- Detalle chic: Rayo de energía en rosa pastel -->
+  <path d="M 270 250 L 230 320 L 265 320 L 245 390 L 295 310 L 260 310 Z" fill="#F48FB1"/>
+</svg>
