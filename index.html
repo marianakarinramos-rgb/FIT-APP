@@ -21,7 +21,6 @@
     <!-- Firebase SDKs con MODO OFFLINE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        // Importamos enableIndexedDbPersistence para que guarde sin internet
         import { getFirestore, enableIndexedDbPersistence, collection, getDocs, setDoc, doc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -235,6 +234,7 @@
         /* Registro Rápido */
         .manual-history-box { background: #FFF5F5; padding: 24px; border-radius: 24px; margin-top: 24px; border: 2px dashed #FFD6D6;}
         .manual-history-box h4 { font-size: 18px; font-weight: 900; margin-bottom: 6px; color: var(--primary); }
+        
         .quick-history-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
         .btn-quick-hist { background: #FFF; border: 2px solid #FFE0E0; padding: 14px; border-radius: 16px; font-weight: 900; font-size: 14px; cursor: pointer; color: var(--primary); transition: 0.2s; box-shadow: 0 4px 10px rgba(255,126,126,0.1); }
         .btn-quick-hist:active { transform: scale(0.95); background: #FFF0F0; }
@@ -257,7 +257,7 @@
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--text-muted); font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.3s;}
         .nav-item.active { color: var(--primary); transform: translateY(-4px);}
 
-        /* Timer Fijo Inamovible, Elegante y Anti-Estiramiento */
+        /* Timer Fijo Inamovible */
         .rest-timer {
             position: fixed; bottom: 105px; left: 50%; transform: translateX(-50%);
             background: var(--primary-gradient); color: #FFF; padding: 14px 28px; border-radius: 99px;
@@ -344,7 +344,7 @@
         <div id="tabRutina" class="app-view active">
             <div id="homeView">
                 <div class="days-grid">
-                    <div class="day-card d1" id="cardD1" onclick="openDay(1)"><div class="day-num">DÍA 1 🏋️‍♀️</div><div class="day-desc">Piernas / Tríceps</div></div>
+                    <div class="day-card d1" id="cardD1" onclick="openDay(1)"><div class="day-num">DÍA 1 🏋️️‍♀️</div><div class="day-desc">Piernas / Tríceps</div></div>
                     <div class="day-card d2" id="cardD2" onclick="openDay(2)"><div class="day-num">DÍA 2 💪</div><div class="day-desc">Hombros / Glúteos</div></div>
                     <div class="day-card d3" id="cardD3" onclick="openDay(3)"><div class="day-num">DÍA 3 ⚡</div><div class="day-desc">Dorsales / Piernas</div></div>
                     <div class="day-card d4" id="cardD4" onclick="openDay(4)"><div class="day-num">DÍA 4 🔥</div><div class="day-desc">Pectorales / Bíceps</div></div>
@@ -397,9 +397,13 @@
 
             <div class="profile-section">
                 
+                <!-- NUEVO BOTÓN ANTI-OLVIDOS CON CALENDARIO -->
                 <div class="manual-history-box">
-                    <h4>⚡ Botón Anti-Olvidos</h4>
-                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px; font-weight: 600;">¿Hiciste la rutina pero no anotaste? Tocá acá para ponerte al día mágicamente:</p>
+                    <h4>⚡ Recuperar Entrenamiento</h4>
+                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px; font-weight: 600;">¿Se olvidaron de anotar? Elegí la fecha exacta en el calendario y tocá qué día hicieron:</p>
+                    
+                    <input type="date" id="manualHistoryDate" style="width: 100%; padding: 12px; border-radius: 16px; border: 2px solid #FFE0E0; font-family: inherit; font-size: 16px; font-weight: 800; color: var(--text-main); margin-bottom: 16px; outline: none; background: #FFF;">
+                    
                     <div class="quick-history-grid">
                         <button class="btn-quick-hist" onclick="quickAddHistory(1)">✔️ Hice Día 1</button>
                         <button class="btn-quick-hist" onclick="quickAddHistory(2)">✔️ Hice Día 2</button>
@@ -996,17 +1000,35 @@
         }
 
         async function quickAddHistory(dayNum) {
-            const dayTitle = masterRutinas[dayNum].title;
-            const ts = Date.now() - (1000 * 60 * 60 * 24); 
-            const dateStr = new Date(ts).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+            const dateInput = document.getElementById('manualHistoryDate').value;
             
+            // Validamos que haya elegido una fecha
+            if (!dateInput) {
+                alert("¡Pará! Elegí una fecha en el calendario primero 📅");
+                return;
+            }
+
+            // Transformamos la fecha del calendario a un formato lindo
+            const parts = dateInput.split('-');
+            const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+            const ts = dateObj.getTime();
+            const dateStr = dateObj.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+            
+            const dayTitle = masterRutinas[dayNum].title;
+            
+            // Lo guardamos en el historial con la fecha exacta
             historyData.unshift({ date: dateStr, dayTitle: dayTitle, dayNum: dayNum, ts: ts });
+            
+            // Ordenamos el historial para que lo más reciente quede arriba
             historyData.sort((a, b) => b.ts - a.ts); 
             
             await saveUserCloudData();
             updateHistoryView();
             updateNextDayHighlight();
-            showToast(`¡${dayTitle} registrado mágicamente! ✨`);
+            
+            // Limpiamos el calendario
+            document.getElementById('manualHistoryDate').value = "";
+            showToast(`¡Anotado! ${dayTitle} el ${dateStr} ✨`);
         }
 
         async function deleteHistory(index) {
