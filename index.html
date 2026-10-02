@@ -10,6 +10,7 @@
     
     <title>Smart-Fit ⭐</title>
     
+    <!-- Enlaces PWA para instalar la App -->
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="logo.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="logo.svg">
@@ -17,10 +18,11 @@
     <!-- SheetJS para Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs con MODO OFFLINE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        // Importamos enableIndexedDbPersistence para que guarde sin internet
+        import { getFirestore, enableIndexedDbPersistence, collection, getDocs, setDoc, doc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAv7UWA2hPnNI_0X9aoMnA5elBJYgO4K40",
@@ -33,6 +35,15 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        // ¡MAGIA OFFLINE ACTIVADA!
+        enableIndexedDbPersistence(db).catch((err) => {
+            if (err.code == 'failed-precondition') {
+                console.log("Múltiples pestañas abiertas, modo offline falló.");
+            } else if (err.code == 'unimplemented') {
+                console.log("El navegador no soporta modo offline.");
+            }
+        });
 
         window.fbDb = db;
         window.fbSetDoc = setDoc;
@@ -279,7 +290,7 @@
 
     <!-- Pantalla Login -->
     <div id="userSelector" style="display: none;">
-        <img src="logo.svg" class="brand-logo-large" alt="Smart-Fit">
+        <img src="logo.svg" class="brand-logo-large" alt="Smart-Fit" onerror="this.style.display='none'">
         <h2>¿Quién entrena hoy? ⭐</h2>
         <div class="user-btn" onclick="selectUser('Mariana')">⭐ Mariana</div>
         <div class="user-btn" onclick="selectUser('Silvana')">⭐ Silvana</div>
@@ -317,7 +328,7 @@
         
         <div class="header">
             <div class="header-info">
-                <img src="logo.svg" alt="Smart-Fit">
+                <img src="logo.svg" alt="Smart-Fit" onerror="this.style.display='none'">
                 <div>
                     <h1 id="userNameHeader">Usuario</h1>
                     <p>SMART-FIT ⭐⭐⭐</p>
@@ -416,7 +427,7 @@
         </div>
     </div>
 
-    <!-- Timer Fijo Inteligente (Ya no se estira ni molesta) -->
+    <!-- Timer Fijo Inteligente -->
     <div class="rest-timer" id="restTimer">
         <span>⏳ <span id="timerText">01:00</span></span>
         <button class="timer-close" onclick="closeTimer()">✕</button>
@@ -1035,6 +1046,7 @@
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
         }
         
+        // REGISTRO DEL SERVICE WORKER
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').catch(() => {});
