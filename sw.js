@@ -1,8 +1,23 @@
-const CACHE_NAME = 'smart-fit-v1';
-self.addEventListener('install', (event) => {
-    self.skipWaiting();
+const CACHE_NAME = 'smartfit-personal-v1';
+const urlsToCache = [
+    './',
+    './index.html',
+    './manifest.json',
+    './logo.svg'
+];
+
+self.addEventListener('install', event => {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(cache => {
+            return cache.addAll(urlsToCache);
+        })
+    );
 });
-self.addEventListener('fetch', (event) => {
-    // Modo online-first para que siempre cargue la última rutina
-    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+
+self.addEventListener('fetch', event => {
+    event.respondWith(
+        caches.match(event.request).then(response => {
+            return response || fetch(event.request);
+        })
+    );
 });
